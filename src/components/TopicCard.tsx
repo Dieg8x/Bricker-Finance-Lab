@@ -13,22 +13,22 @@ export function TopicCard({ topic, onSelect }: Props) {
   }[topic.difficulty];
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
-      <div className="mb-3 flex items-start justify-between gap-3">
+    <article className="group relative flex flex-col rounded-2xl border border-slate-200/60 glass-panel p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-glass animate-slide-up">
+      <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-brand">{topic.category}</p>
-          <h3 className="mt-1 text-lg font-bold text-ink">{topic.title}</h3>
+          <h3 className="mt-1.5 text-xl font-bold text-ink group-hover:text-brand transition-colors">{topic.title}</h3>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-bold ${levelClass}`}>{topic.difficulty}</span>
+        <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${levelClass}`}>{topic.difficulty}</span>
       </div>
-      <p className="min-h-12 text-sm leading-6 text-slate-600">{topic.description}</p>
-      <p className="mt-3 text-xs text-slate-500">Hoja base: {topic.sheet}</p>
+      <p className="text-sm leading-6 text-slate-600 mb-4">{topic.description}</p>
+      <p className="mt-auto mb-6 text-xs text-slate-500 font-medium">Hoja: {topic.sheet}</p>
       <button
         type="button"
-        className="mt-5 w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-bold text-white hover:bg-[#173d60]"
+        className="mt-auto w-full rounded-xl bg-slate-100/80 px-4 py-2.5 text-sm font-bold text-ink transition-all group-hover:bg-brand group-hover:text-white group-hover:shadow-md"
         onClick={() => onSelect(topic)}
       >
-        Resolver ejercicio
+        Resolver Ejercicio
       </button>
     </article>
   );

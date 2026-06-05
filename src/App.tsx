@@ -77,19 +77,21 @@ export default function App() {
     return (
       <main className="min-h-screen px-5 py-8 md:px-8">
         <section className="mx-auto max-w-7xl">
-          <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-brand">Bricker Finance Lab</p>
-              <h1 className="mt-2 text-4xl font-black tracking-tight text-ink md:text-5xl">Elige el tema que quieres resolver</h1>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-                App basada en el Excel Formulario Bricker. Cada módulo pide solo los datos necesarios, calcula el resultado y explica el procedimiento como estudiante.
-              </p>
+          <header className="mb-10 text-center mt-12 animate-fade-in">
+            <div className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-4 py-1.5 mb-6 text-sm font-semibold text-brand ring-1 ring-inset ring-brand/20">
+              <span>🚀 Herramienta Premium</span>
             </div>
-            <div className="flex items-center gap-4 no-print">
+            <h1 className="text-5xl font-black tracking-tight text-ink md:text-6xl mb-4">
+              Bricker Finance <span className="text-brand">Lab</span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg text-slate-600">
+              Laboratorio de derivados financieros y valuación avanzada. Calcula y analiza futuros, opciones, swaps y estrategias combinadas.
+            </p>
+            <div className="mt-8 flex justify-center items-center gap-4 no-print flex-wrap">
               <BanxicoPanel onRatesFetched={setActiveRates} />
-              <label className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                <input type="checkbox" checked={examMode} onChange={(event) => setExamMode(event.target.checked)} />
-                <span className="text-sm font-bold text-ink">Modo examen</span>
+              <label className="flex items-center gap-3 rounded-xl border border-slate-200/60 glass-panel px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" checked={examMode} onChange={(event) => setExamMode(event.target.checked)} />
+                <span className="text-sm font-bold text-ink">Modo examen simulación</span>
               </label>
             </div>
           </header>
@@ -117,32 +119,32 @@ export default function App() {
   return (
     <main className="min-h-screen px-5 py-6 md:px-8">
       <section className="mx-auto max-w-7xl">
-        <header className="no-print mb-6 flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+        <header className="no-print mb-8 flex flex-col gap-5 rounded-2xl glass-panel p-6 shadow-glass md:flex-row md:items-center md:justify-between animate-fade-in">
           <div>
-            <button type="button" className="mb-3 text-sm font-bold text-brand" onClick={() => setSelectedTopic(null)}>
-              ← Volver al menú
+            <button type="button" className="mb-2 inline-flex items-center gap-2 text-sm font-bold text-brand hover:text-brand-dark transition-colors" onClick={() => setSelectedTopic(null)}>
+              <span>←</span> Volver al menú
             </button>
-            <h1 className="text-3xl font-black text-ink">{selectedTopic.title}</h1>
-            <p className="mt-1 text-sm text-slate-600">Hoja de referencia: {selectedTopic.sheet}</p>
+            <h1 className="text-3xl font-black text-ink tracking-tight">{selectedTopic.title}</h1>
+            <p className="mt-1.5 text-sm font-medium text-slate-500">Hoja de referencia: <span className="text-slate-700">{selectedTopic.sheet}</span></p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold">
-              <input type="checkbox" checked={examMode} onChange={(event) => setExamMode(event.target.checked)} />
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 rounded-xl bg-white/50 border border-slate-200/60 px-4 py-2.5 text-sm font-bold shadow-sm cursor-pointer hover:bg-white/80 transition-colors">
+              <input type="checkbox" className="w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand" checked={examMode} onChange={(event) => setExamMode(event.target.checked)} />
               Modo examen
             </label>
-            <button type="button" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-ink" onClick={resetCurrent}>
+            <button type="button" className="rounded-xl bg-white/50 border border-slate-200/60 px-5 py-2.5 text-sm font-bold text-ink shadow-sm hover:bg-white/80 transition-colors" onClick={resetCurrent}>
               Limpiar
             </button>
-            <button type="button" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-ink" onClick={() => window.print()}>
-              Exportar / imprimir
+            <button type="button" className="rounded-xl bg-white/50 border border-slate-200/60 px-5 py-2.5 text-sm font-bold text-ink shadow-sm hover:bg-white/80 transition-colors" onClick={() => window.print()}>
+              Exportar
             </button>
             <button
               type="button"
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white"
+              className="rounded-xl bg-brand hover:bg-brand-dark transition-colors px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={copyResult}
               disabled={!result}
             >
-              {copied ? "Copiado" : "Copiar resultado"}
+              {copied ? "¡Copiado!" : "Copiar resultado"}
             </button>
             <BanxicoPanel onRatesFetched={setActiveRates} />
           </div>
