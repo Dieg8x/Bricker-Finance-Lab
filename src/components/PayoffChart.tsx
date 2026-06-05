@@ -7,13 +7,14 @@ interface Props {
 }
 
 export function PayoffChart({ topicId, values }: Props) {
-  const strike = Number(values.strike) || 100;
+  const strike = Number(values.strike) || Number(values.strike1) || 100;
+  const strike2 = Number(values.strike2) || strike;
   const spotFinal = Number(values.spot) || strike;
 
   const data = useMemo(() => {
     const points = [];
-    const minSpot = strike * 0.5;
-    const maxSpot = strike * 1.5;
+    const minSpot = Math.min(strike, strike2) * 0.5;
+    const maxSpot = Math.max(strike, strike2) * 1.5;
     const step = (maxSpot - minSpot) / 50;
 
     for (let x = minSpot; x <= maxSpot; x += step) {
@@ -23,6 +24,24 @@ export function PayoffChart({ topicId, values }: Props) {
           "Forward Largo": x - strike,
           "Forward Corto": strike - x,
         });
+      } else if (topicId === "option_strategies") {
+        const strategy = String(values.strategy);
+        const k1 = Number(values.strike1) || 100;
+        const k2 = Number(values.strike2) || 110;
+        const p1 = Number(values.premium1) || 0;
+        const p2 = Number(values.premium2) || 0;
+        
+        let payoff = 0;
+        if (strategy === "bull_spread_call") {
+          payoff = Math.max(x - k1, 0) - Math.max(x - k2, 0) - (p1 - p2);
+        } else if (strategy === "bear_spread_put") {
+          payoff = Math.max(k2 - x, 0) - Math.max(k1 - x, 0) - (p2 - p1);
+        } else if (strategy === "straddle") {
+          payoff = Math.max(x - k1, 0) + Math.max(k1 - x, 0) - (p1 + p2);
+        } else if (strategy === "strangle") {
+          payoff = Math.max(k1 - x, 0) + Math.max(x - k2, 0) - (p1 + p2);
+        }
+        points.push({ spot: x, "Estrategia": payoff });
       } else {
         const callP = Number(values.callPremium) || 0;
         const putP = Number(values.putPremium) || 0;
@@ -36,7 +55,7 @@ export function PayoffChart({ topicId, values }: Props) {
       }
     }
     return points;
-  }, [topicId, strike, values]);
+  }, [topicId, strike, strike2, values]);
 
   // Find min/max for scaling
   const allValues = data.flatMap((d) => {
@@ -58,8 +77,8 @@ export function PayoffChart({ topicId, values }: Props) {
   const innerHeight = height - margin.top - margin.bottom;
 
   // Scale functions
-  const minSpot = strike * 0.5;
-  const maxSpot = strike * 1.5;
+  const minSpot = Math.min(strike, strike2) * 0.5;
+  const maxSpot = Math.max(strike, strike2) * 1.5;
   const xScale = (x: number) => ((x - minSpot) / (maxSpot - minSpot)) * innerWidth;
   const yScale = (y: number) => innerHeight - ((y - domainMin) / (domainMax - domainMin)) * innerHeight;
 
@@ -73,6 +92,7 @@ export function PayoffChart({ topicId, values }: Props) {
     "Put Comprado": "#8b5cf6", // violet-500
     "Call Vendido": "#f59e0b", // amber-500
     "Put Vendido": "#06b6d4", // cyan-500
+    "Estrategia": "#8b5cf6", // violet-500
   };
 
   const seriesKeys = Object.keys(data[0]).filter((k) => k !== "spot");
@@ -87,8 +107,16 @@ export function PayoffChart({ topicId, values }: Props) {
             <line x1={0} x2={innerWidth} y1={zeroY} y2={zeroY} stroke="#cbd5e1" strokeWidth="2" />
             <line x1={xScale(strike)} x2={xScale(strike)} y1={0} y2={innerHeight} stroke="#94a3b8" strokeDasharray="4 4" />
             <text x={xScale(strike)} y={innerHeight + 20} fontSize="12" textAnchor="middle" fill="#64748b">
-              Strike ({strike})
+              K1 ({strike})
             </text>
+            {topicId === "option_strategies" && strike2 !== strike && (
+              <>
+                <line x1={xScale(strike2)} x2={xScale(strike2)} y1={0} y2={innerHeight} stroke="#94a3b8" strokeDasharray="4 4" />
+                <text x={xScale(strike2)} y={innerHeight + 20} fontSize="12" textAnchor="middle" fill="#64748b">
+                  K2 ({strike2})
+                </text>
+              </>
+            )}
 
             {/* Current Spot Indicator */}
             {spotFinal >= minSpot && spotFinal <= maxSpot && (

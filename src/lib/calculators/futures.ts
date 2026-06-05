@@ -154,3 +154,40 @@ export function calculateIndexFuture(input: CalculationInput): CalculationResult
     warnings,
   };
 }
+
+export function calculateCrossHedging(input: CalculationInput): CalculationResult {
+  const portfolioValue = asNumber(input.portfolioValue);
+  const futurePrice = asNumber(input.futurePrice);
+  const multiplier = asNumber(input.multiplier);
+  const beta = asNumber(input.beta);
+  
+  const contractValue = futurePrice * multiplier;
+  const rawContracts = (beta * portfolioValue) / contractValue;
+  const contracts = Math.round(rawContracts);
+
+  const warnings = compactWarnings([
+    requirePositive(portfolioValue, "el valor del portafolio"),
+    requirePositive(futurePrice, "el precio futuro"),
+    requirePositive(multiplier, "el multiplicador"),
+    requirePositive(beta, "la Beta (o ratio de correlación)"),
+  ]);
+
+  return {
+    results: { contractValue: round(contractValue, 4), rawContracts: round(rawContracts, 4), contracts },
+    metrics: [
+      { key: "contracts", label: "Contratos (Redondeado)", value: contracts, emphasis: true },
+      { key: "rawContracts", label: "Contratos (Exacto)", value: rawContracts },
+      { key: "contractValue", label: "Valor por contrato", value: contractValue, unit: "$" },
+    ],
+    formula: "N = Beta × (Valor Portafolio / Valor Contrato)",
+    steps: [
+      `Valor del contrato = ${formatNumber(futurePrice, 2)} × ${formatNumber(multiplier, 2)} = ${formatMoney(contractValue)}`,
+      `Contratos (N) = ${formatNumber(beta, 2)} × (${formatMoney(portfolioValue)} / ${formatMoney(contractValue)}) = ${formatNumber(rawContracts, 4)}`,
+      `Se redondea a ${contracts} contratos.`,
+    ],
+    interpretation: `Para cubrir el portafolio dada su volatilidad (Beta de ${formatNumber(beta, 2)}), se requiere vender ${contracts} contratos.`,
+    examExplanation: "Para la cobertura cruzada o ajuste de beta, multiplicamos la cantidad teórica de contratos por el factor Beta o Ratio de Cobertura de Varianza Mínima.",
+    warnings,
+  };
+}
+

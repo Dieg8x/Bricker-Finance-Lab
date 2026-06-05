@@ -191,7 +191,7 @@ export default function App() {
                   ))}
                 </section>
                 
-                {selectedTopic.id.startsWith("payoff_") && (
+                {(selectedTopic.id.startsWith("payoff_") || selectedTopic.id === "option_strategies") && (
                   <PayoffChart topicId={selectedTopic.id} values={values} />
                 )}
 
