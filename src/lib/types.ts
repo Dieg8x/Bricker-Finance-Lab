@@ -23,6 +23,23 @@ export interface TopicOutput {
   formula: string;
 }
 
+export interface StudySection {
+  title: string;
+  bullets: string[];
+}
+
+export interface ComparisonRow {
+  aspect: string;
+  left: string;
+  right: string;
+}
+
+export interface ExamQuestion {
+  question: string;
+  answer: string;
+  explanation: string;
+}
+
 export interface TopicDefinition {
   id: string;
   title: string;
@@ -32,6 +49,14 @@ export interface TopicDefinition {
   category: string;
   inputs: TopicInput[];
   outputs: TopicOutput[];
+  studySections?: StudySection[];
+  comparison?: {
+    leftTitle: string;
+    rightTitle: string;
+    rows: ComparisonRow[];
+  };
+  cheatSheet?: string[];
+  questions?: ExamQuestion[];
 }
 
 export interface ResultMetric {

@@ -2,6 +2,131 @@ import type { TopicDefinition } from "../lib/types";
 
 export const excelMap: TopicDefinition[] = [
   {
+    id: "derivatives_theory",
+    title: "Guía rápida de derivados",
+    sheet: "Resumen Ejecutivo 01",
+    description: "Conceptos base: subyacente, cobertura, mercados, participantes y usos de derivados.",
+    difficulty: "Básico",
+    category: "Teoría",
+    inputs: [],
+    outputs: [],
+    studySections: [
+      {
+        title: "Qué es un derivado",
+        bullets: [
+          "Instrumento cuyo valor depende de otro activo llamado subyacente.",
+          "Puede usarse para cobertura, inversión, especulación o planeación financiera.",
+          "Permite fijar condiciones presentes para una operación futura.",
+        ],
+      },
+      {
+        title: "Mercados",
+        bullets: [
+          "Mercado bursátil: contratos estandarizados, bolsa, cámara de compensación y reglas claras.",
+          "Mercado OTC: contratos privados, flexibles, hechos a la medida y con mayor riesgo de contraparte.",
+        ],
+      },
+      {
+        title: "Participantes",
+        bullets: [
+          "Bolsa de derivados, cámara de compensación, socios liquidadores, operadores e intermediarios.",
+          "Empresas importadoras/exportadoras usan derivados para cubrir flujos futuros.",
+        ],
+      },
+    ],
+    questions: [
+      {
+        question: "¿Cuál es la función principal de los derivados?",
+        answer: "Administrar riesgos financieros ligados a un subyacente y fijar condiciones futuras.",
+        explanation: "El derivado permite planear pagos/cobros o limitar pérdidas ante movimientos del mercado.",
+      },
+    ],
+  },
+  {
+    id: "forward_vs_future",
+    title: "Forward vs futuro",
+    sheet: "Resúmenes Ejecutivos 02 y 03",
+    description: "Compara contratos forward y futuros para contestar teoría rápidamente.",
+    difficulty: "Básico",
+    category: "Teoría",
+    inputs: [],
+    outputs: [],
+    comparison: {
+      leftTitle: "Forward",
+      rightTitle: "Futuro",
+      rows: [
+        { aspect: "Mercado", left: "OTC, privado y negociado entre partes.", right: "Bursátil, organizado y regulado." },
+        { aspect: "Estandarización", left: "Flexible, hecho a la medida.", right: "Estandarizado por bolsa." },
+        { aspect: "Riesgo contraparte", left: "Mayor, depende de la contraparte.", right: "Menor por cámara de compensación." },
+        { aspect: "Liquidación", left: "Normalmente al vencimiento.", right: "Liquidación diaria por márgenes." },
+        { aspect: "Uso común", left: "Divisas, commodities, necesidades específicas.", right: "Coberturas e inversión con contratos listados." },
+      ],
+    },
+    studySections: [
+      {
+        title: "Respuesta corta de examen",
+        bullets: [
+          "Ambos fijan precio futuro.",
+          "Forward es flexible y OTC; futuro es estandarizado y compensado.",
+          "El futuro reduce riesgo de contraparte mediante márgenes y cámara de compensación.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "hedge_selector",
+    title: "Selector de cobertura",
+    sheet: "Resúmenes Ejecutivos 01-04",
+    description: "Decide qué posición tomar para cubrir alza o baja del subyacente.",
+    difficulty: "Básico",
+    category: "Teoría",
+    inputs: [],
+    outputs: [],
+    studySections: [
+      {
+        title: "Regla práctica",
+        bullets: [
+          "Si temes que el precio suba porque vas a comprar: toma posición larga o compra call.",
+          "Si temes que el precio baje porque ya tienes el activo: toma posición corta o compra put.",
+          "La cobertura debe ganar cuando tu exposición original pierde.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "futures_margins",
+    title: "Márgenes en futuros",
+    sheet: "Resumen Ejecutivo 01 y 02",
+    description: "Explica margen inicial, margin call y liquidación diaria.",
+    difficulty: "Medio",
+    category: "Teoría",
+    inputs: [],
+    outputs: [],
+    studySections: [
+      {
+        title: "Margen inicial",
+        bullets: [
+          "Garantía mínima que se deposita para abrir contratos de futuros.",
+          "Puede ser efectivo o valores aceptados por la cámara/intermediario.",
+        ],
+      },
+      {
+        title: "Margin call",
+        bullets: [
+          "Aportación adicional cuando las pérdidas reducen la garantía disponible.",
+          "Busca mantener la solvencia de la posición.",
+        ],
+      },
+      {
+        title: "Liquidación diaria",
+        bullets: [
+          "Los futuros reconocen ganancias y pérdidas diariamente.",
+          "La cámara de compensación reduce el riesgo de incumplimiento.",
+        ],
+      },
+    ],
+  },
+  {
     id: "simple_swap",
     title: "Swap de tasas simple",
     sheet: "SWAPS SIMPLE",
@@ -117,6 +242,21 @@ export const excelMap: TopicDefinition[] = [
     outputs: [{ key: "futurePrice", label: "Precio futuro", formula: "(S - VP(dividendo)) × (1 + r×d/360)" }],
   },
   {
+    id: "index_future",
+    title: "Futuro de índice con dividendos",
+    sheet: "Resumen Ejecutivo 02",
+    description: "Calcula futuro teórico de índice con tasa libre de riesgo menos rendimiento por dividendos.",
+    difficulty: "Medio",
+    category: "Futuros",
+    inputs: [
+      { key: "indexSpot", label: "Índice spot", defaultValue: 52000 },
+      { key: "days", label: "Plazo", unit: "días", defaultValue: 180 },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.08 },
+      { key: "dividendYield", label: "Tasa de dividendos", unit: "%", defaultValue: 0.02 },
+    ],
+    outputs: [{ key: "futurePrice", label: "Futuro de índice", formula: "Índice × e^((Rf-d)×n/360)" }],
+  },
+  {
     id: "commodity_future",
     title: "Precio futuro de commodity",
     sheet: "Precio Futuro del Commodity o C",
@@ -213,6 +353,39 @@ export const excelMap: TopicDefinition[] = [
       { key: "volatility", label: "Volatilidad", unit: "%", defaultValue: 0.33 },
     ],
     outputs: [{ key: "call", label: "Call", formula: "S×N(d1)-K×e^(-rt)×N(d2)" }],
+    studySections: [
+      {
+        title: "Interpretación de griegas",
+        bullets: [
+          "Delta: cambio de la prima ante $1 de cambio en el subyacente.",
+          "Gamma: cambio de delta cuando cambia el subyacente.",
+          "Theta: efecto del paso del tiempo sobre la prima.",
+          "Vega: sensibilidad a volatilidad.",
+          "Rho: sensibilidad a tasa de interés.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "binomial_option",
+    title: "Opción binomial 1 periodo",
+    sheet: "Resumen Ejecutivo 04",
+    description: "Valúa una opción con probabilidad neutral al riesgo y dos escenarios.",
+    difficulty: "Avanzado",
+    category: "Opciones",
+    inputs: [
+      { key: "spot", label: "Spot", unit: "$", defaultValue: 100 },
+      { key: "strike", label: "Strike", unit: "$", defaultValue: 100 },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.08 },
+      { key: "days", label: "Plazo", unit: "días", defaultValue: 180 },
+      { key: "upFactor", label: "Factor de alza (u)", defaultValue: 1.2 },
+      { key: "downFactor", label: "Factor de baja (d)", defaultValue: 0.85 },
+      { key: "optionType", label: "Tipo de opción", defaultValue: "call", type: "select", options: [
+        { label: "Call", value: "call" },
+        { label: "Put", value: "put" },
+      ] },
+    ],
+    outputs: [{ key: "optionPrice", label: "Precio de opción", formula: "e^(-Rf t)[pλu+(1-p)λd]" }],
   },
   {
     id: "comparative_advantage",
@@ -253,5 +426,50 @@ export const excelMap: TopicDefinition[] = [
       { key: "finalPrice", label: "Precio final", unit: "$", defaultValue: 105 },
     ],
     outputs: [{ key: "profitLoss", label: "P/L", formula: "payoff - costo" }],
+    cheatSheet: [
+      "+C = +A + P  | Largo call = largo subyacente + largo put",
+      "-C = -A - P  | Corto call = corto subyacente + corto put",
+      "+P = +C - A  | Largo put = largo call + corto subyacente",
+      "-P = -C + A  | Corto put = corto call + largo subyacente",
+      "+A = +C - P  | Largo subyacente = largo call + corto put",
+      "-A = -C + P  | Corto subyacente = corto call + largo put",
+    ],
+  },
+  {
+    id: "exam_quiz",
+    title: "Preguntas tipo examen",
+    sheet: "Resúmenes Ejecutivos 01-06",
+    description: "Preguntas conceptuales con respuesta oculta para practicar antes del examen.",
+    difficulty: "Medio",
+    category: "Modo examen",
+    inputs: [],
+    outputs: [],
+    questions: [
+      {
+        question: "¿Qué contrato es más flexible: forward o futuro?",
+        answer: "Forward.",
+        explanation: "El forward se negocia OTC y se adapta a monto, plazo y condiciones de las partes.",
+      },
+      {
+        question: "¿Qué instrumento usarías para cubrir una baja si tienes el activo?",
+        answer: "Futuro/forward corto o put comprado.",
+        explanation: "Ambos ganan valor cuando el subyacente baja y compensan la pérdida del activo.",
+      },
+      {
+        question: "¿Qué griega mide el cambio de la prima ante volatilidad?",
+        answer: "Vega.",
+        explanation: "Vega mide sensibilidad del valor de la opción a cambios en volatilidad.",
+      },
+      {
+        question: "¿Qué swap intercambia tasa fija por variable?",
+        answer: "Swap de tasas de interés.",
+        explanation: "Permite convertir exposición fija a variable o viceversa mediante flujos de intereses.",
+      },
+      {
+        question: "¿Qué significa -A = -C + P?",
+        answer: "Corto subyacente sintético.",
+        explanation: "Se replica vendiendo call y comprando put.",
+      },
+    ],
   },
 ];

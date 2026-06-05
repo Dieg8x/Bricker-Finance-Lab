@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { DynamicForm } from "./components/DynamicForm";
 import { ExamModeExplanation } from "./components/ExamModeExplanation";
 import { FormulaBox } from "./components/FormulaBox";
+import { GlossaryPanel } from "./components/GlossaryPanel";
 import { ResultCard } from "./components/ResultCard";
 import { StepByStep } from "./components/StepByStep";
+import { StudyPanel } from "./components/StudyPanel";
 import { TopicCard } from "./components/TopicCard";
 import { topics } from "./data/topics";
 import { calculators } from "./lib/calculators";
@@ -96,6 +98,7 @@ export default function App() {
                 </div>
               </section>
             ))}
+            <GlossaryPanel />
           </div>
         </section>
       </main>
@@ -137,16 +140,19 @@ export default function App() {
           </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(340px,440px),1fr]">
-          <DynamicForm
-            topic={selectedTopic}
-            values={values}
-            onChange={(key, value) => setValues((current) => ({ ...current, [key]: value }))}
-            onSubmit={calculate}
-            onReset={resetCurrent}
-          />
+        {selectedTopic.inputs.length === 0 ? (
+          <StudyPanel topic={selectedTopic} />
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[minmax(340px,440px),1fr]">
+            <DynamicForm
+              topic={selectedTopic}
+              values={values}
+              onChange={(key, value) => setValues((current) => ({ ...current, [key]: value }))}
+              onSubmit={calculate}
+              onReset={resetCurrent}
+            />
 
-          <section className="grid gap-5">
+            <section className="grid gap-5">
             {!result ? (
               <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-soft">
                 <p className="text-sm font-bold uppercase tracking-wide text-brand">Esperando datos</p>
@@ -186,8 +192,9 @@ export default function App() {
             <FormulaBox formula={result?.formula ?? selectedTopic.outputs[0]?.formula ?? ""} hidden={formulaHidden} />
             {result ? <StepByStep steps={result.steps} /> : null}
             {result ? <ExamModeExplanation explanation={result.examExplanation} /> : null}
-          </section>
-        </div>
+            </section>
+          </div>
+        )}
       </section>
     </main>
   );

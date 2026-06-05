@@ -43,6 +43,25 @@ const rate = calculators.forward_rate({
 });
 assertClose("forward rate", Number(rate.results.forwardRate), 0.07278, 0.0001);
 
+const indexFuture = calculators.index_future({
+  indexSpot: 52000,
+  days: 180,
+  riskFreeRate: 0.08,
+  dividendYield: 0.02,
+});
+assertClose("index future", Number(indexFuture.results.futurePrice), 53583.6358, 0.2);
+
+const binomial = calculators.binomial_option({
+  spot: 100,
+  strike: 100,
+  riskFreeRate: 0.08,
+  days: 180,
+  upFactor: 1.2,
+  downFactor: 0.85,
+  optionType: "call",
+});
+assertClose("binomial option", Number(binomial.results.optionPrice), 10.4759, 0.1);
+
 const swap = calculators.simple_swap({
   notional: 250000,
   fixedRate: 0.1,

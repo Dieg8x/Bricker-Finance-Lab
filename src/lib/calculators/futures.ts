@@ -99,3 +99,35 @@ export function calculateFutureContracts(input: CalculationInput): CalculationRe
     warnings,
   };
 }
+
+export function calculateIndexFuture(input: CalculationInput): CalculationResult {
+  const indexSpot = asNumber(input.indexSpot);
+  const days = asNumber(input.days);
+  const riskFreeRate = normalizeRate(input.riskFreeRate);
+  const dividendYield = normalizeRate(input.dividendYield);
+  const t = days / 360;
+  const futurePrice = indexSpot * Math.exp((riskFreeRate - dividendYield) * t);
+  const warnings = compactWarnings([
+    requirePositive(indexSpot, "el índice spot"),
+    requirePositive(days, "el plazo"),
+    requireRate(input.riskFreeRate, "la tasa libre de riesgo"),
+    requireRate(input.dividendYield, "la tasa de dividendos"),
+  ]);
+
+  return {
+    results: { futurePrice: round(futurePrice, 4), carryRate: round(riskFreeRate - dividendYield, 6) },
+    metrics: [
+      { key: "futurePrice", label: "Futuro teórico del índice", value: futurePrice, emphasis: true },
+      { key: "carryRate", label: "Costo de acarreo neto", value: riskFreeRate - dividendYield, unit: "%" },
+    ],
+    formula: "F = Índice × e^((Rf - d) × n/360)",
+    steps: [
+      `Costo neto = ${formatPercent(riskFreeRate)} - ${formatPercent(dividendYield)} = ${formatPercent(riskFreeRate - dividendYield)}`,
+      `F = ${formatNumber(indexSpot, 2)} × e^(${formatPercent(riskFreeRate - dividendYield)} × ${days}/360)`,
+      `F = ${formatNumber(futurePrice, 4)}`,
+    ],
+    interpretation: `El precio teórico del futuro sobre índice sería ${formatNumber(futurePrice, 4)} puntos.`,
+    examExplanation: "Para futuros sobre índices se capitaliza el índice spot con la tasa libre de riesgo neta de dividendos durante el plazo.",
+    warnings,
+  };
+}

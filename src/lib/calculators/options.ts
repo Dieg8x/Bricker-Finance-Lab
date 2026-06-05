@@ -81,3 +81,51 @@ export function calculateBlackScholes(input: CalculationInput): CalculationResul
     warnings,
   };
 }
+
+export function calculateBinomialOption(input: CalculationInput): CalculationResult {
+  const spot = asNumber(input.spot);
+  const strike = asNumber(input.strike);
+  const rate = normalizeRate(input.riskFreeRate);
+  const days = asNumber(input.days);
+  const upFactor = asNumber(input.upFactor);
+  const downFactor = asNumber(input.downFactor);
+  const optionType = String(input.optionType);
+  const t = days / 360;
+  const growth = Math.exp(rate * t);
+  const probability = (growth - downFactor) / (upFactor - downFactor);
+  const upSpot = spot * upFactor;
+  const downSpot = spot * downFactor;
+  const upPayoff = optionType === "put" ? Math.max(strike - upSpot, 0) : Math.max(upSpot - strike, 0);
+  const downPayoff = optionType === "put" ? Math.max(strike - downSpot, 0) : Math.max(downSpot - strike, 0);
+  const optionPrice = Math.exp(-rate * t) * (probability * upPayoff + (1 - probability) * downPayoff);
+  const warnings = compactWarnings([
+    requirePositive(spot, "el spot"),
+    requirePositive(strike, "el strike"),
+    requireRate(input.riskFreeRate, "la tasa libre de riesgo"),
+    requirePositive(days, "el plazo"),
+    requirePositive(upFactor, "el factor de alza"),
+    requirePositive(downFactor, "el factor de baja"),
+    upFactor <= downFactor ? "El factor de alza debe ser mayor al factor de baja." : null,
+    probability < 0 || probability > 1 ? "La probabilidad neutral al riesgo salió fuera de 0 a 1; revisa u, d y tasa." : null,
+  ]);
+
+  return {
+    results: { probability, upPayoff, downPayoff, optionPrice },
+    metrics: [
+      { key: "optionPrice", label: "Precio binomial", value: optionPrice, unit: "$", emphasis: true },
+      { key: "probability", label: "Probabilidad neutral", value: probability },
+      { key: "upPayoff", label: "Payoff al alza", value: upPayoff, unit: "$" },
+      { key: "downPayoff", label: "Payoff a la baja", value: downPayoff, unit: "$" },
+    ],
+    formula: "P = e^(-Rf t)[pλu + (1-p)λd]; p=(e^(Rf t)-d)/(u-d)",
+    steps: [
+      `p = (e^(${formatPercent(rate)} × ${formatNumber(t, 4)}) - ${formatNumber(downFactor, 4)}) / (${formatNumber(upFactor, 4)} - ${formatNumber(downFactor, 4)}) = ${formatNumber(probability, 4)}`,
+      `Payoff al alza = ${formatMoney(upPayoff)}; payoff a la baja = ${formatMoney(downPayoff)}`,
+      `P = e^(-${formatPercent(rate)} × ${formatNumber(t, 4)}) × [${formatNumber(probability, 4)} × ${formatMoney(upPayoff)} + (1-p) × ${formatMoney(downPayoff)}]`,
+      `P = ${formatMoney(optionPrice)}`,
+    ],
+    interpretation: `La opción ${optionType === "put" ? "put" : "call"} vale aproximadamente ${formatMoney(optionPrice)} con un árbol binomial de un periodo.`,
+    examExplanation: "Primero calculamos la probabilidad neutral al riesgo, luego los payoffs en escenario de alza y baja, y finalmente descontamos el valor esperado.",
+    warnings,
+  };
+}
