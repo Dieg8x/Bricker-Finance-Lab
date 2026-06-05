@@ -6,7 +6,13 @@ export function calculateSimpleFuture(input: CalculationInput): CalculationResul
   const spot = asNumber(input.spot);
   const days = asNumber(input.days);
   const rate = normalizeRate(input.riskFreeRate);
-  const futurePrice = spot * (1 + rate * (days / 360));
+  const compounding = String(input.compounding || "simple");
+  
+  const factor = compounding === "continuous" 
+    ? Math.exp(rate * (days / 360))
+    : (1 + rate * (days / 360));
+    
+  const futurePrice = spot * factor;
   const difference = futurePrice - spot;
   const warnings = compactWarnings([
     requirePositive(spot, "el precio spot"),
@@ -20,10 +26,12 @@ export function calculateSimpleFuture(input: CalculationInput): CalculationResul
       { key: "futurePrice", label: "Precio futuro teórico", value: futurePrice, unit: "$", emphasis: true },
       { key: "difference", label: "Diferencia contra spot", value: difference, unit: "$" },
     ],
-    formula: "F = S × (1 + r × d / 360)",
+    formula: compounding === "continuous" ? "F = S × e^(r × d/360)" : "F = S × (1 + r × d / 360)",
     steps: [
-      "Se usa la fórmula de precio futuro simple con base de 360 días.",
-      `F = ${formatMoney(spot)} × (1 + ${formatPercent(rate)} × ${days}/360)`,
+      `Se usa la fórmula de precio futuro con capitalización ${compounding === "continuous" ? "continua" : "simple"} y base 360.`,
+      compounding === "continuous" 
+        ? `F = ${formatMoney(spot)} × e^(${formatPercent(rate)} × ${days}/360)`
+        : `F = ${formatMoney(spot)} × (1 + ${formatPercent(rate)} × ${days}/360)`,
       `F = ${formatMoney(futurePrice)}`,
       `Diferencia = ${formatMoney(futurePrice)} - ${formatMoney(spot)} = ${formatMoney(difference)}`,
     ],
@@ -43,8 +51,19 @@ export function calculateStockFuture(input: CalculationInput): CalculationResult
   const rate = normalizeRate(input.riskFreeRate);
   const dividend = asNumber(input.dividend);
   const dividendDays = asNumber(input.dividendDays);
-  const pvDividend = dividend / (1 + rate * (dividendDays / 360));
-  const futurePrice = (spot - pvDividend) * (1 + rate * (days / 360));
+  const compounding = String(input.compounding || "simple");
+
+  const pvFactor = compounding === "continuous"
+    ? Math.exp(-rate * (dividendDays / 360))
+    : 1 / (1 + rate * (dividendDays / 360));
+    
+  const pvDividend = dividend * pvFactor;
+  
+  const fvFactor = compounding === "continuous"
+    ? Math.exp(rate * (days / 360))
+    : (1 + rate * (days / 360));
+
+  const futurePrice = (spot - pvDividend) * fvFactor;
   const warnings = compactWarnings([
     requirePositive(spot, "el precio spot"),
     requirePositive(days, "el plazo"),
@@ -59,10 +78,14 @@ export function calculateStockFuture(input: CalculationInput): CalculationResult
       { key: "futurePrice", label: "Precio futuro de la acción", value: futurePrice, unit: "$", emphasis: true },
       { key: "pvDividend", label: "Valor presente del dividendo", value: pvDividend, unit: "$" },
     ],
-    formula: "F = (S - VP(dividendo)) × (1 + r × d / 360)",
+    formula: compounding === "continuous" ? "F = (S - VP(d)) × e^(r×d/360)" : "F = (S - VP(dividendo)) × (1 + r × d / 360)",
     steps: [
-      `VP(dividendo) = ${formatMoney(dividend)} / (1 + ${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`,
-      `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × (1 + ${formatPercent(rate)} × ${days}/360)`,
+      compounding === "continuous"
+        ? `VP(dividendo) = ${formatMoney(dividend)} × e^(-${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`
+        : `VP(dividendo) = ${formatMoney(dividend)} / (1 + ${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`,
+      compounding === "continuous"
+        ? `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × e^(${formatPercent(rate)} × ${days}/360)`
+        : `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × (1 + ${formatPercent(rate)} × ${days}/360)`,
       `F = ${formatMoney(futurePrice)}`,
     ],
     interpretation: `El precio futuro teórico de la acción sería ${formatMoney(futurePrice)} después de descontar el dividendo.`,

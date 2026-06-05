@@ -30,21 +30,23 @@ export function calculateBlackScholes(input: CalculationInput): CalculationResul
   const rate = normalizeRate(input.riskFreeRate);
   const days = asNumber(input.days);
   const volatility = normalizeRate(input.volatility);
+  const dividendYield = normalizeRate(input.dividendYield || 0); // Extension Merton
   const t = days / 360;
   const sqrtT = Math.sqrt(t);
-  const d1 = (Math.log(spot / strike) + (rate + volatility ** 2 / 2) * t) / (volatility * sqrtT);
+  const d1 = (Math.log(spot / strike) + (rate - dividendYield + volatility ** 2 / 2) * t) / (volatility * sqrtT);
   const d2 = d1 - volatility * sqrtT;
   const nd1 = normalCdf(d1);
   const nd2 = normalCdf(d2);
   const nMinusD1 = normalCdf(-d1);
   const nMinusD2 = normalCdf(-d2);
   const discountStrike = strike * Math.exp(-rate * t);
-  const call = spot * nd1 - discountStrike * nd2;
-  const put = discountStrike * nMinusD2 - spot * nMinusD1;
-  const gamma = normalPdf(d1) / (spot * volatility * sqrtT);
-  const vega = spot * normalPdf(d1) * sqrtT / 100;
-  const thetaCall = (-(spot * normalPdf(d1) * volatility) / (2 * sqrtT) - rate * discountStrike * nd2) / 360;
-  const thetaPut = (-(spot * normalPdf(d1) * volatility) / (2 * sqrtT) + rate * discountStrike * nMinusD2) / 360;
+  const discountSpot = spot * Math.exp(-dividendYield * t);
+  const call = discountSpot * nd1 - discountStrike * nd2;
+  const put = discountStrike * nMinusD2 - discountSpot * nMinusD1;
+  const gamma = (normalPdf(d1) * Math.exp(-dividendYield * t)) / (spot * volatility * sqrtT);
+  const vega = discountSpot * normalPdf(d1) * sqrtT / 100;
+  const thetaCall = (-(discountSpot * normalPdf(d1) * volatility) / (2 * sqrtT) + dividendYield * discountSpot * nd1 - rate * discountStrike * nd2) / 360;
+  const thetaPut = (-(discountSpot * normalPdf(d1) * volatility) / (2 * sqrtT) - dividendYield * discountSpot * nMinusD1 + rate * discountStrike * nMinusD2) / 360;
   const rhoCall = strike * t * Math.exp(-rate * t) * nd2 / 100;
   const rhoPut = -strike * t * Math.exp(-rate * t) * nMinusD2 / 100;
   const warnings = compactWarnings([
@@ -62,17 +64,17 @@ export function calculateBlackScholes(input: CalculationInput): CalculationResul
       { key: "put", label: "Put", value: put, unit: "$", emphasis: true },
       { key: "d1", label: "d1", value: d1 },
       { key: "d2", label: "d2", value: d2 },
-      { key: "deltaCall", label: "Delta call", value: nd1 },
-      { key: "deltaPut", label: "Delta put", value: nd1 - 1 },
+      { key: "deltaCall", label: "Delta call", value: Math.exp(-dividendYield * t) * nd1 },
+      { key: "deltaPut", label: "Delta put", value: Math.exp(-dividendYield * t) * (nd1 - 1) },
       { key: "gamma", label: "Gamma", value: gamma },
       { key: "vega", label: "Vega", value: vega },
       { key: "thetaCall", label: "Theta call", value: thetaCall },
       { key: "rhoCall", label: "Rho call", value: rhoCall },
     ],
-    formula: "d1=[ln(S/K)+(r+σ²/2)t]/[σ√t]; d2=d1-σ√t; Call=S N(d1)-K e^(-rt) N(d2)",
+    formula: "d1=[ln(S/K)+(r-q+σ²/2)t]/[σ√t]; d2=d1-σ√t; Call=S e^(-qt) N(d1)-K e^(-rt) N(d2)",
     steps: [
       `t = ${days}/360 = ${formatNumber(t, 4)} años`,
-      `d1 = [ln(${spot}/${strike}) + (${formatPercent(rate)} + ${formatPercent(volatility)}²/2) × ${formatNumber(t, 4)}] / [${formatPercent(volatility)} × √${formatNumber(t, 4)}] = ${formatNumber(d1, 4)}`,
+      `d1 = [ln(${spot}/${strike}) + (${formatPercent(rate)} - ${formatPercent(dividendYield)} + ${formatPercent(volatility)}²/2) × ${formatNumber(t, 4)}] / [${formatPercent(volatility)} × √${formatNumber(t, 4)}] = ${formatNumber(d1, 4)}`,
       `d2 = ${formatNumber(d1, 4)} - ${formatPercent(volatility)} × √${formatNumber(t, 4)} = ${formatNumber(d2, 4)}`,
       `Call = ${formatMoney(call)}; Put = ${formatMoney(put)}`,
     ],

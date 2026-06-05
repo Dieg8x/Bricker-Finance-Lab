@@ -238,6 +238,10 @@ export const excelMap: TopicDefinition[] = [
       { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.0681 },
       { key: "dividend", label: "Dividendo", unit: "$", defaultValue: 2 },
       { key: "dividendDays", label: "Días al dividendo", unit: "días", defaultValue: 90 },
+      { key: "compounding", label: "Capitalización", defaultValue: "simple", type: "select", options: [
+        { label: "Simple (1 + rt)", value: "simple" },
+        { label: "Continua (e^rt)", value: "continuous" },
+      ] },
     ],
     outputs: [{ key: "futurePrice", label: "Precio futuro", formula: "(S - VP(dividendo)) × (1 + r×d/360)" }],
   },
@@ -267,6 +271,10 @@ export const excelMap: TopicDefinition[] = [
       { key: "spot", label: "Precio spot del commodity", unit: "$", defaultValue: 59, helper: "Precio actual del commodity en mercado spot." },
       { key: "days", label: "Plazo futuro", unit: "días", defaultValue: 120 },
       { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "% anual", defaultValue: 0.0681 },
+      { key: "compounding", label: "Capitalización", defaultValue: "simple", type: "select", options: [
+        { label: "Simple (1 + rt)", value: "simple" },
+        { label: "Continua (e^rt)", value: "continuous" },
+      ] },
     ],
     outputs: [{ key: "futurePrice", label: "Precio teórico futuro", formula: "spot * (1 + riskFreeRate * (days / 360))" }],
   },
@@ -351,6 +359,7 @@ export const excelMap: TopicDefinition[] = [
       { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.185 },
       { key: "days", label: "Plazo", unit: "días", defaultValue: 22 },
       { key: "volatility", label: "Volatilidad", unit: "%", defaultValue: 0.33 },
+      { key: "dividendYield", label: "Tasa por dividendo (q)", unit: "%", defaultValue: 0 },
     ],
     outputs: [{ key: "call", label: "Call", formula: "S×N(d1)-K×e^(-rt)×N(d2)" }],
     studySections: [
