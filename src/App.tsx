@@ -8,6 +8,7 @@ import { StepByStep } from "./components/StepByStep";
 import { StudyPanel } from "./components/StudyPanel";
 import { TopicCard } from "./components/TopicCard";
 import { BanxicoPanel } from "./components/BanxicoPanel";
+import { PayoffChart } from "./components/PayoffChart";
 import { topics } from "./data/topics";
 import { calculators } from "./lib/calculators";
 import type { CalculationInput, CalculationResult, TopicDefinition } from "./lib/types";
@@ -189,6 +190,10 @@ export default function App() {
                     <ResultCard key={metric.key} metric={metric} />
                   ))}
                 </section>
+                
+                {selectedTopic.id.startsWith("payoff_") && (
+                  <PayoffChart topicId={selectedTopic.id} values={values} />
+                )}
 
                 <section className="rounded-lg border border-slate-200 bg-white p-5">
                   <h3 className="text-base font-bold text-ink">Interpretación</h3>
