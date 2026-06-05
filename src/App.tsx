@@ -7,9 +7,11 @@ import { ResultCard } from "./components/ResultCard";
 import { StepByStep } from "./components/StepByStep";
 import { StudyPanel } from "./components/StudyPanel";
 import { TopicCard } from "./components/TopicCard";
+import { BanxicoPanel } from "./components/BanxicoPanel";
 import { topics } from "./data/topics";
 import { calculators } from "./lib/calculators";
 import type { CalculationInput, CalculationResult, TopicDefinition } from "./lib/types";
+import type { ActiveRates } from "./lib/banxico";
 
 function defaultsFor(topic: TopicDefinition): CalculationInput {
   return Object.fromEntries(topic.inputs.map((input) => [input.key, input.defaultValue]));
@@ -31,6 +33,7 @@ export default function App() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [examMode, setExamMode] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [activeRates, setActiveRates] = useState<ActiveRates | null>(null);
 
   const groupedTopics = useMemo(() => {
     return topics.reduce<Record<string, TopicDefinition[]>>((groups, topic) => {
@@ -81,10 +84,13 @@ export default function App() {
                 App basada en el Excel Formulario Bricker. Cada módulo pide solo los datos necesarios, calcula el resultado y explica el procedimiento como estudiante.
               </p>
             </div>
-            <label className="no-print flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <input type="checkbox" checked={examMode} onChange={(event) => setExamMode(event.target.checked)} />
-              <span className="text-sm font-bold text-ink">Modo examen</span>
-            </label>
+            <div className="flex items-center gap-4 no-print">
+              <BanxicoPanel onRatesFetched={setActiveRates} />
+              <label className="flex w-fit items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <input type="checkbox" checked={examMode} onChange={(event) => setExamMode(event.target.checked)} />
+                <span className="text-sm font-bold text-ink">Modo examen</span>
+              </label>
+            </div>
           </header>
 
           <div className="grid gap-8">
@@ -137,6 +143,7 @@ export default function App() {
             >
               {copied ? "Copiado" : "Copiar resultado"}
             </button>
+            <BanxicoPanel onRatesFetched={setActiveRates} />
           </div>
         </header>
 
@@ -147,6 +154,7 @@ export default function App() {
             <DynamicForm
               topic={selectedTopic}
               values={values}
+              activeRates={activeRates}
               onChange={(key, value) => setValues((current) => ({ ...current, [key]: value }))}
               onSubmit={calculate}
               onReset={resetCurrent}

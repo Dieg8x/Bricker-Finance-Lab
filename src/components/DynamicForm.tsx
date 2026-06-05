@@ -1,4 +1,5 @@
 import type { CalculationInput, TopicDefinition } from "../lib/types";
+import type { ActiveRates } from "../lib/banxico";
 
 interface Props {
   topic: TopicDefinition;
@@ -6,9 +7,10 @@ interface Props {
   onChange: (key: string, value: number | string) => void;
   onSubmit: () => void;
   onReset: () => void;
+  activeRates?: ActiveRates | null;
 }
 
-export function DynamicForm({ topic, values, onChange, onSubmit, onReset }: Props) {
+export function DynamicForm({ topic, values, onChange, onSubmit, onReset, activeRates }: Props) {
   return (
     <form
       className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft"
@@ -51,6 +53,30 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset }: Prop
                 onChange={(event) => onChange(field.key, event.target.value)}
               />
             )}
+            
+            {activeRates && field.key.toLowerCase().includes("rate") && (
+              <div className="flex gap-2 flex-wrap mt-1">
+                {activeRates.cetes28 && (
+                  <button 
+                    type="button" 
+                    onClick={() => onChange(field.key, activeRates.cetes28.dato)}
+                    className="text-[11px] bg-blue-50 text-brand border border-blue-200 rounded px-2 py-0.5 font-medium hover:bg-blue-100"
+                  >
+                    ⚡ CETES 28d ({(activeRates.cetes28.dato * 100).toFixed(2)}%)
+                  </button>
+                )}
+                {activeRates.tiie28 && (
+                  <button 
+                    type="button" 
+                    onClick={() => onChange(field.key, activeRates.tiie28.dato)}
+                    className="text-[11px] bg-blue-50 text-brand border border-blue-200 rounded px-2 py-0.5 font-medium hover:bg-blue-100"
+                  >
+                    ⚡ TIIE 28d ({(activeRates.tiie28.dato * 100).toFixed(2)}%)
+                  </button>
+                )}
+              </div>
+            )}
+            
             {field.helper ? <span className="text-xs leading-5 text-slate-500">{field.helper}</span> : null}
           </label>
         ))}
