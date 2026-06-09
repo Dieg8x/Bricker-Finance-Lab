@@ -1,11 +1,11 @@
 import type { CalculationInput, CalculationResult } from "../types";
 import { calculateFRA } from "./fra";
 import { calculateForwardFX, calculateForwardRate } from "./forwards";
-import { calculateCommodityFuture, calculateFutureContracts, calculateIndexFuture, calculateSimpleFuture, calculateStockFuture, calculateCrossHedging, calculateIPCCoverage, calculateStockFutureCoverage, calculateCommodityCoverage } from "./futures";
+import { calculateCommodityFuture, calculateFutureContracts, calculateIndexFuture, calculateSimpleFuture, calculateStockFuture, calculateCrossHedging, calculateIPCCoverage, calculateStockFutureCoverage, calculateCommodityCoverage, calculateMarginCall } from "./futures";
 import { calculateBinomialOption, calculateBlackScholes } from "./options";
 import { calculatePayoffWithPremium, calculatePayoffWithoutPremium } from "./payoffs";
 import { calculateWiredRate } from "./rates";
-import { calculateComparativeAdvantage, calculateSimpleSwap } from "./swaps";
+import { calculateComparativeAdvantage, calculateSimpleSwap, calculateEquitySwap } from "./swaps";
 import { calculateSyntheticDerivative } from "./syntheticDerivatives";
 import { calculateOptionStrategies } from "./strategies";
 
@@ -32,4 +32,6 @@ export const calculators: Record<string, (input: CalculationInput) => Calculatio
   ipc_coverage: calculateIPCCoverage,
   stock_future_coverage: calculateStockFutureCoverage,
   commodity_coverage: calculateCommodityCoverage,
+  equity_swap: calculateEquitySwap,
+  futures_margins_calc: calculateMarginCall,
 };

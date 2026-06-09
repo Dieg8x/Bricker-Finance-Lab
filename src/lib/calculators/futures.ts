@@ -424,3 +424,72 @@ export function calculateCommodityCoverage(input: CalculationInput): Calculation
     warnings,
   };
 }
+
+export function calculateMarginCall(input: CalculationInput): CalculationResult {
+  const futuresPrice = asNumber(input.futuresPrice);
+  const contractSize = asNumber(input.contractSize);
+  const contracts = asNumber(input.contracts);
+  const initialMarginRate = normalizeRate(input.initialMarginRate);
+  const maintenanceMarginRate = normalizeRate(input.maintenanceMarginRate);
+  const previousPrice = asNumber(input.previousPrice || 0);
+
+  const contractValue = futuresPrice * contractSize * contracts;
+  const initialMargin = contractValue * initialMarginRate;
+  const maintenanceMargin = initialMargin * maintenanceMarginRate;
+  const dailyPnL = previousPrice > 0
+    ? (futuresPrice - previousPrice) * contractSize * contracts
+    : 0;
+  const currentEquity = initialMargin + dailyPnL;
+  const marginCallAmount = currentEquity < maintenanceMargin
+    ? initialMargin - currentEquity
+    : 0;
+  const hasMarginCall = marginCallAmount > 0;
+
+  const warnings = compactWarnings([
+    requirePositive(futuresPrice, "el precio del futuro"),
+    requirePositive(contractSize, "el tamaño del contrato"),
+    requirePositive(contracts, "el número de contratos"),
+    requireRate(input.initialMarginRate, "la tasa de margen inicial"),
+    requireRate(input.maintenanceMarginRate, "la tasa de mantenimiento"),
+    hasMarginCall ? `MARGIN CALL: debes depositar ${formatMoney(marginCallAmount)} para reponer el margen.` : null,
+  ]);
+
+  return {
+    results: {
+      contractValue: round(contractValue, 2),
+      initialMargin: round(initialMargin, 2),
+      maintenanceMargin: round(maintenanceMargin, 2),
+      dailyPnL: round(dailyPnL, 2),
+      currentEquity: round(currentEquity, 2),
+      marginCallAmount: round(marginCallAmount, 2),
+    },
+    metrics: [
+      { key: "initialMargin", label: "Margen inicial requerido", value: initialMargin, unit: "$", emphasis: true },
+      { key: "maintenanceMargin", label: "Margen de mantenimiento", value: maintenanceMargin, unit: "$" },
+      { key: "contractValue", label: "Valor total de contratos", value: contractValue, unit: "$" },
+      ...(previousPrice > 0 ? [
+        { key: "dailyPnL", label: "P&L del día", value: dailyPnL, unit: "$", emphasis: true },
+        { key: "currentEquity", label: "Saldo actual de la cuenta", value: currentEquity, unit: "$" },
+        { key: "marginCallAmount", label: hasMarginCall ? "MARGIN CALL — depositar" : "Sin margin call", value: marginCallAmount, unit: "$", emphasis: hasMarginCall },
+      ] : []),
+    ],
+    formula: "IM = Precio × Tamaño × Contratos × tasa_IM  |  Mantenimiento = IM × tasa_mant  |  P&L = (Precio − Prev) × Tam × Contratos",
+    steps: [
+      `Valor total = ${formatMoney(futuresPrice)} × ${formatNumber(contractSize, 0)} × ${contracts} = ${formatMoney(contractValue)}`,
+      `Margen inicial = ${formatMoney(contractValue)} × ${formatPercent(initialMarginRate)} = ${formatMoney(initialMargin)}`,
+      `Margen mantenimiento = ${formatMoney(initialMargin)} × ${formatPercent(maintenanceMarginRate)} = ${formatMoney(maintenanceMargin)}`,
+      ...(previousPrice > 0 ? [
+        `P&L del día = (${formatMoney(futuresPrice)} − ${formatMoney(previousPrice)}) × ${contractSize} × ${contracts} = ${formatMoney(dailyPnL)}`,
+        `Saldo actual = ${formatMoney(initialMargin)} + (${formatMoney(dailyPnL)}) = ${formatMoney(currentEquity)}`,
+        hasMarginCall
+          ? `Saldo ${formatMoney(currentEquity)} < Mantenimiento ${formatMoney(maintenanceMargin)} → MARGIN CALL de ${formatMoney(marginCallAmount)}`
+          : `Saldo ${formatMoney(currentEquity)} ≥ Mantenimiento ${formatMoney(maintenanceMargin)} → Sin margin call`,
+      ] : []),
+    ],
+    interpretation: hasMarginCall
+      ? `MARGIN CALL: el saldo de ${formatMoney(currentEquity)} cayó por debajo del margen de mantenimiento (${formatMoney(maintenanceMargin)}). Debes depositar ${formatMoney(marginCallAmount)} para volver al margen inicial.`
+      : `El margen inicial requerido es ${formatMoney(initialMargin)}. El margen de mantenimiento es ${formatMoney(maintenanceMargin)}.${previousPrice > 0 ? ` Saldo actual ${formatMoney(currentEquity)} — sin margin call.` : ""}`,
+    examExplanation: "1) Margen inicial = valor total × tasa (ej. 10%). 2) Margen de mantenimiento = inicial × tasa (ej. 75% del inicial). 3) Si el P&L negativo reduce el saldo por debajo del mantenimiento, hay margin call para reponer al nivel inicial.",
+    warnings,
+  };
+}

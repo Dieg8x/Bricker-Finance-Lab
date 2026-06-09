@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { CalculationInput, TopicDefinition } from "../lib/types";
 import type { ActiveRates } from "../lib/banxico";
 
@@ -40,8 +41,17 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
       )}
 
       <div className="grid gap-4">
-        {topic.inputs.map((field) => (
-          <label key={field.key} className="grid gap-1.5">
+        {topic.inputs.map((field, i) => {
+          const prevSection = i > 0 ? topic.inputs[i - 1].section : undefined;
+          const showSection = field.section && field.section !== prevSection;
+          return (
+          <Fragment key={field.key}>
+          {showSection && (
+            <div className="border-t border-dashed border-slate-200 pt-3 -mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{field.section}</p>
+            </div>
+          )}
+          <label className="grid gap-1.5">
             <span className="flex items-center gap-2 text-sm font-bold text-ink">
               {field.label}
               {field.unit ? <span className="font-normal text-slate-500">({field.unit})</span> : null}
@@ -93,7 +103,7 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
 
             {field.isPercent && (
               <span className="inline-block mt-0.5 rounded bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-700 w-fit">
-                = {(Number(values[field.key]) * 100).toFixed(4)}% anual
+                = {(Number(values[field.key]) * 100).toFixed(4)}% {field.percentSuffix ?? "anual"}
               </span>
             )}
 
@@ -122,7 +132,9 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
 
             {field.helper ? <span className="text-xs leading-5 text-slate-500">{field.helper}</span> : null}
           </label>
-        ))}
+          </Fragment>
+          );
+        })}
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">

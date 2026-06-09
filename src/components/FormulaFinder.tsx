@@ -15,26 +15,30 @@ const categories: { id: Category; label: string; emoji: string }[] = [
 
 const options: Record<NonNullable<Category>, { label: string; id: string }[]> = {
   futuros: [
-    { label: "Precio futuro de acción", id: "stock_future" },
-    { label: "Precio futuro de commodity", id: "commodity_future" },
-    { label: "Precio futuro de índice", id: "index_future" },
-    { label: "Cobertura de portafolio IPC", id: "ipc_coverage" },
-    { label: "Cobertura de acciones", id: "stock_future_coverage" },
-    { label: "Cobertura de commodity", id: "commodity_coverage" },
-    { label: "Número de contratos", id: "future_fra_basic" },
+    { label: "Precio futuro accion (con/sin dividendo + nocional)", id: "stock_future" },
+    { label: "Precio futuro commodity", id: "commodity_future" },
+    { label: "Precio futuro indice (IPC/S&P)", id: "index_future" },
+    { label: "Cobertura portafolio IPC", id: "ipc_coverage" },
+    { label: "Cobertura acciones con futuros", id: "stock_future_coverage" },
+    { label: "Cobertura commodity con futuros", id: "commodity_coverage" },
+    { label: "Margenes / Margin Call", id: "futures_margins_calc" },
+    { label: "Numero de contratos", id: "future_fra_basic" },
   ],
   opciones: [
     { label: "Black-Scholes (prima + griegas)", id: "options_greeks" },
     { label: "Binomial (un periodo)", id: "binomial_option" },
     { label: "Estrategias (spreads / straddle)", id: "option_strategies" },
+    { label: "Guia visual 4 posiciones", id: "options_visual_guide" },
   ],
   swaps: [
-    { label: "Swap de tasas simple", id: "simple_swap" },
-    { label: "Ventaja comparativa", id: "comparative_advantage" },
+    { label: "Swap de tasas simple (VPN)", id: "simple_swap" },
+    { label: "Equity Swap", id: "equity_swap" },
+    { label: "Ventaja comparativa + diagrama H", id: "comparative_advantage" },
   ],
   tasas: [
-    { label: "Forward de tasas", id: "forward_rate" },
-    { label: "FRA liquidación", id: "fra_calculator" },
+    { label: "Forward de divisas (MXN/USD)", id: "forward_fx" },
+    { label: "Forward de tasas de interes", id: "forward_rate" },
+    { label: "FRA liquidacion", id: "fra_calculator" },
     { label: "Tasas alambradas", id: "wired_rates" },
   ],
 };

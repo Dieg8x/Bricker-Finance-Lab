@@ -145,3 +145,46 @@ export function calculateComparativeAdvantage(input: CalculationInput): Calculat
     warnings,
   };
 }
+
+export function calculateEquitySwap(input: CalculationInput): CalculationResult {
+  const notional = asNumber(input.notional);
+  const initialPrice = asNumber(input.initialPrice);
+  const finalPrice = asNumber(input.finalPrice);
+  const rate = normalizeRate(input.rate);
+  const days = asNumber(input.days);
+  const position = String(input.position || "equityPayer");
+
+  const equityReturn = initialPrice > 0 ? notional * (finalPrice / initialPrice - 1) : 0;
+  const rateCashFlow = notional * rate * (days / 360);
+  // Equity payer: pays equity return, receives rate payment  → net = rateCashFlow - equityReturn
+  // Rate payer:  receives equity return, pays rate payment   → net = equityReturn - rateCashFlow
+  const net = position === "equityPayer" ? rateCashFlow - equityReturn : equityReturn - rateCashFlow;
+  const equityReturnPct = initialPrice > 0 ? (finalPrice - initialPrice) / initialPrice : 0;
+
+  const warnings = compactWarnings([
+    requirePositive(notional, "el nocional"),
+    requirePositive(initialPrice, "el precio inicial"),
+    requirePositive(finalPrice, "el precio final"),
+    requireRate(input.rate, "la tasa de referencia"),
+    requirePositive(days, "el plazo"),
+  ]);
+
+  return {
+    results: { equityReturn: round(equityReturn, 2), rateCashFlow: round(rateCashFlow, 2), net: round(net, 2), equityReturnPct: round(equityReturnPct, 6) },
+    metrics: [
+      { key: "equityReturn", label: "Rendimiento de la acción/índice", value: equityReturn, unit: "$", emphasis: true },
+      { key: "rateCashFlow", label: "Pago de tasa variable", value: rateCashFlow, unit: "$" },
+      { key: "net", label: "Flujo neto del swap", value: net, unit: "$", emphasis: true },
+      { key: "equityReturnPct", label: "Rendimiento % del subyacente", value: equityReturnPct, unit: "%" },
+    ],
+    formula: "Rendimiento_equity = N × (ST/S0 - 1)  |  Pago_tasa = N × r × d/360  |  Neto = Pago_tasa - Rendimiento_equity",
+    steps: [
+      `Rendimiento equity = ${formatMoney(notional)} × (${finalPrice}/${initialPrice} − 1) = ${formatMoney(equityReturn)}`,
+      `Pago de tasa = ${formatMoney(notional)} × ${formatPercent(rate)} × ${days}/360 = ${formatMoney(rateCashFlow)}`,
+      `${position === "equityPayer" ? "Pagador de equity (recibe tasa)" : "Pagador de tasa (recibe equity)"}: ${formatMoney(rateCashFlow)} − ${formatMoney(equityReturn)} = ${formatMoney(net)}`,
+    ],
+    interpretation: `El subyacente ${finalPrice >= initialPrice ? "subió" : "bajó"} ${formatPercent(Math.abs(equityReturnPct))} (rendimiento ${formatMoney(equityReturn)}). El pago de tasa variable es ${formatMoney(rateCashFlow)}. Flujo neto del swap: ${net >= 0 ? "recibe" : "paga"} ${formatMoney(Math.abs(net))}.`,
+    examExplanation: "1) Calcula el rendimiento del subyacente (ST/S0 - 1) × nocional. 2) Calcula el pago de tasa variable (N × r × d/360). 3) El flujo neto depende de qué posición tienes: pagador de equity recibe la tasa y paga el rendimiento del subyacente.",
+    warnings,
+  };
+}
