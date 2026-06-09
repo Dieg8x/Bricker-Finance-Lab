@@ -49,47 +49,66 @@ export function calculateStockFuture(input: CalculationInput): CalculationResult
   const spot = asNumber(input.spot);
   const days = asNumber(input.days);
   const rate = normalizeRate(input.riskFreeRate);
-  const dividend = asNumber(input.dividend);
-  const dividendDays = asNumber(input.dividendDays);
   const compounding = String(input.compounding || "simple");
+  const hasDividend = String(input.dividendMode || "no") === "yes";
+
+  const dividend = hasDividend ? asNumber(input.dividend) : 0;
+  const dividendDays = hasDividend ? asNumber(input.dividendDays) : 0;
 
   const pvFactor = compounding === "continuous"
     ? Math.exp(-rate * (dividendDays / 360))
     : 1 / (1 + rate * (dividendDays / 360));
-    
-  const pvDividend = dividend * pvFactor;
-  
+
+  const pvDividend = hasDividend ? dividend * pvFactor : 0;
+
   const fvFactor = compounding === "continuous"
     ? Math.exp(rate * (days / 360))
     : (1 + rate * (days / 360));
 
   const futurePrice = (spot - pvDividend) * fvFactor;
+
   const warnings = compactWarnings([
     requirePositive(spot, "el precio spot"),
     requirePositive(days, "el plazo"),
     requireRate(input.riskFreeRate, "la tasa libre de riesgo"),
-    requireNonNegative(dividend, "el dividendo"),
-    requireNonNegative(dividendDays, "los días al dividendo"),
+    hasDividend ? requireNonNegative(dividend, "el dividendo") : null,
+    hasDividend ? requireNonNegative(dividendDays, "los días al dividendo") : null,
   ]);
+
+  const formulaSinDiv = compounding === "continuous" ? "F = S × e^(r×d/360)" : "F = S × (1 + r × d/360)";
+  const formulaConDiv = compounding === "continuous" ? "F = (S - VP_div) × e^(r×d/360)" : "F = (S - VP_div) × (1 + r × d/360)";
+
+  const stepsSinDiv = [
+    compounding === "continuous"
+      ? `F = ${formatMoney(spot)} × e^(${formatPercent(rate)} × ${days}/360)`
+      : `F = ${formatMoney(spot)} × (1 + ${formatPercent(rate)} × ${days}/360)`,
+    `F = ${formatMoney(futurePrice)}`,
+  ];
+
+  const stepsConDiv = [
+    compounding === "continuous"
+      ? `VP(dividendo) = ${formatMoney(dividend)} × e^(-${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`
+      : `VP(dividendo) = ${formatMoney(dividend)} / (1 + ${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`,
+    compounding === "continuous"
+      ? `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × e^(${formatPercent(rate)} × ${days}/360)`
+      : `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × (1 + ${formatPercent(rate)} × ${days}/360)`,
+    `F = ${formatMoney(futurePrice)}`,
+  ];
 
   return {
     results: { pvDividend: round(pvDividend, 4), futurePrice: round(futurePrice, 4) },
     metrics: [
       { key: "futurePrice", label: "Precio futuro de la acción", value: futurePrice, unit: "$", emphasis: true },
-      { key: "pvDividend", label: "Valor presente del dividendo", value: pvDividend, unit: "$" },
+      ...(hasDividend ? [{ key: "pvDividend", label: "VP del dividendo descontado", value: pvDividend, unit: "$" }] : []),
     ],
-    formula: compounding === "continuous" ? "F = (S - VP(d)) × e^(r×d/360)" : "F = (S - VP(dividendo)) × (1 + r × d / 360)",
-    steps: [
-      compounding === "continuous"
-        ? `VP(dividendo) = ${formatMoney(dividend)} × e^(-${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`
-        : `VP(dividendo) = ${formatMoney(dividend)} / (1 + ${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`,
-      compounding === "continuous"
-        ? `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × e^(${formatPercent(rate)} × ${days}/360)`
-        : `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × (1 + ${formatPercent(rate)} × ${days}/360)`,
-      `F = ${formatMoney(futurePrice)}`,
-    ],
-    interpretation: `El precio futuro teórico de la acción sería ${formatMoney(futurePrice)} después de descontar el dividendo.`,
-    examExplanation: "Primero traemos el dividendo a valor presente, se lo restamos al spot y luego capitalizamos al plazo del futuro.",
+    formula: hasDividend ? formulaConDiv : formulaSinDiv,
+    steps: hasDividend ? stepsConDiv : stepsSinDiv,
+    interpretation: hasDividend
+      ? `Con dividendo de ${formatMoney(dividend)} en ${dividendDays} días, el precio futuro teórico es ${formatMoney(futurePrice)}.`
+      : `Sin dividendo, el precio futuro teórico de la acción es ${formatMoney(futurePrice)}.`,
+    examExplanation: hasDividend
+      ? "1) Descuenta el dividendo a valor presente. 2) Réstalo al spot. 3) Capitaliza al plazo del futuro."
+      : "Sin dividendo: simplemente capitaliza el spot por la tasa libre de riesgo durante el plazo.",
     warnings,
   };
 }

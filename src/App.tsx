@@ -13,6 +13,7 @@ import { PayoffTable } from "./components/PayoffTable";
 import { FormulaFinder } from "./components/FormulaFinder";
 import { HistoryPanel, saveToHistory } from "./components/HistoryPanel";
 import { ComparativeAdvantageChart } from "./components/ComparativeAdvantageChart";
+import { OptionsGuide } from "./components/OptionsGuide";
 import { topics } from "./data/topics";
 import { calculators } from "./lib/calculators";
 import type { CalculationInput, CalculationResult, TopicDefinition } from "./lib/types";
@@ -198,7 +199,9 @@ export default function App() {
           </div>
         </header>
 
-        {selectedTopic.inputs.length === 0 ? (
+        {selectedTopic.id === "options_visual_guide" ? (
+          <OptionsGuide />
+        ) : selectedTopic.inputs.length === 0 ? (
           <StudyPanel topic={selectedTopic} />
         ) : (
           <div className="grid gap-6 lg:grid-cols-[minmax(340px,440px),1fr]">

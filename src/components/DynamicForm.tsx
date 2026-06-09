@@ -70,11 +70,15 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
                 step="any"
                 value={(() => {
                   const raw = Number(values[field.key]);
-                  return isNaN(raw) ? "" : (raw * 100).toString();
+                  if (isNaN(raw)) return "";
+                  // Round to avoid floating-point display noise (e.g. 5.550000000001)
+                  return String(Math.round(raw * 100 * 1e8) / 1e8);
                 })()}
                 onChange={(event) => {
                   const v = parseFloat(event.target.value);
-                  onChange(field.key, isNaN(v) ? 0 : v / 100);
+                  if (isNaN(v)) { onChange(field.key, 0); return; }
+                  // Store rounded decimal to avoid float noise (e.g. 5.55/100 = 0.0555 not 0.055500000004)
+                  onChange(field.key, Math.round((v / 100) * 1e10) / 1e10);
                 }}
               />
             ) : (
