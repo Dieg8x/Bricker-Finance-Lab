@@ -248,8 +248,8 @@ export default function App() {
                   <PayoffChart topicId={selectedTopic.id} values={values} />
                 )}
 
-                {(selectedTopic.id === "ipc_coverage" || selectedTopic.id === "stock_future_coverage" || selectedTopic.id === "commodity_coverage") && (
-                  <PayoffTable topicId={selectedTopic.id} values={values} />
+                {(selectedTopic.id === "ipc_coverage" || selectedTopic.id === "stock_future_coverage" || selectedTopic.id === "commodity_coverage" || selectedTopic.id === "stock_future") && (
+                  <PayoffTable topicId={selectedTopic.id} values={values} result={result} />
                 )}
 
                 {selectedTopic.id === "comparative_advantage" && (
