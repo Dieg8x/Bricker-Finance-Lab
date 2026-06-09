@@ -12,6 +12,7 @@ import { PayoffChart } from "./components/PayoffChart";
 import { PayoffTable } from "./components/PayoffTable";
 import { FormulaFinder } from "./components/FormulaFinder";
 import { HistoryPanel, saveToHistory } from "./components/HistoryPanel";
+import { ComparativeAdvantageChart } from "./components/ComparativeAdvantageChart";
 import { topics } from "./data/topics";
 import { calculators } from "./lib/calculators";
 import type { CalculationInput, CalculationResult, TopicDefinition } from "./lib/types";
@@ -246,6 +247,10 @@ export default function App() {
 
                 {(selectedTopic.id === "ipc_coverage" || selectedTopic.id === "stock_future_coverage" || selectedTopic.id === "commodity_coverage") && (
                   <PayoffTable topicId={selectedTopic.id} values={values} />
+                )}
+
+                {selectedTopic.id === "comparative_advantage" && (
+                  <ComparativeAdvantageChart result={result} />
                 )}
 
                 <section className="rounded-lg border border-slate-200 bg-white p-5">
