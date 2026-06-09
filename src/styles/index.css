@@ -28,11 +28,11 @@ body {
 }
 
 @media print {
-  .no-print {
-    display: none !important;
-  }
-
-  body {
-    background: white;
-  }
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  .glass-panel { background: white !important; border: 1px solid #e2e8f0 !important; }
+  section { break-inside: avoid; }
+  h1, h2, h3 { color: #0f172a !important; }
+  /* Make result cards show borders in print */
+  [class*="bg-blue-50"] { background: #eff6ff !important; -webkit-print-color-adjust: exact; }
 }

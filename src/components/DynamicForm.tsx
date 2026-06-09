@@ -63,6 +63,20 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
                   </option>
                 ))}
               </select>
+            ) : field.isPercent ? (
+              <input
+                className="rounded-lg border border-slate-300 bg-yellow-50 px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-blue-100"
+                type="number"
+                step="any"
+                value={(() => {
+                  const raw = Number(values[field.key]);
+                  return isNaN(raw) ? "" : (raw * 100).toString();
+                })()}
+                onChange={(event) => {
+                  const v = parseFloat(event.target.value);
+                  onChange(field.key, isNaN(v) ? 0 : v / 100);
+                }}
+              />
             ) : (
               <input
                 className="rounded-lg border border-slate-300 bg-yellow-50 px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-blue-100"
@@ -71,6 +85,12 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
                 value={values[field.key]}
                 onChange={(event) => onChange(field.key, event.target.value)}
               />
+            )}
+
+            {field.isPercent && (
+              <span className="inline-block mt-0.5 rounded bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-700 w-fit">
+                = {(Number(values[field.key]) * 100).toFixed(4)}% anual
+              </span>
             )}
 
             {activeRates && field.key.toLowerCase().includes("rate") && (

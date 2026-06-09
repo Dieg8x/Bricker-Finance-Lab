@@ -9,6 +9,9 @@ import { StudyPanel } from "./components/StudyPanel";
 import { TopicCard } from "./components/TopicCard";
 import { BanxicoPanel } from "./components/BanxicoPanel";
 import { PayoffChart } from "./components/PayoffChart";
+import { PayoffTable } from "./components/PayoffTable";
+import { FormulaFinder } from "./components/FormulaFinder";
+import { HistoryPanel, saveToHistory } from "./components/HistoryPanel";
 import { topics } from "./data/topics";
 import { calculators } from "./lib/calculators";
 import type { CalculationInput, CalculationResult, TopicDefinition } from "./lib/types";
@@ -35,14 +38,21 @@ export default function App() {
   const [examMode, setExamMode] = useState(true);
   const [copied, setCopied] = useState(false);
   const [activeRates, setActiveRates] = useState<ActiveRates | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const groupedTopics = useMemo(() => {
-    return topics.reduce<Record<string, TopicDefinition[]>>((groups, topic) => {
+    const filtered = searchQuery.length > 0
+      ? topics.filter((t) =>
+          t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (t.description ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : topics;
+    return filtered.reduce<Record<string, TopicDefinition[]>>((groups, topic) => {
       groups[topic.category] = groups[topic.category] ?? [];
       groups[topic.category].push(topic);
       return groups;
     }, {});
-  }, []);
+  }, [searchQuery]);
 
   function selectTopic(topic: TopicDefinition) {
     setSelectedTopic(topic);
@@ -58,6 +68,7 @@ export default function App() {
     if (!calculator) return;
     setResult(calculator(values));
     setCopied(false);
+    saveToHistory(selectedTopic.title, selectedTopic.id, "Calculado exitosamente");
   }
 
   async function copyResult() {
@@ -96,6 +107,36 @@ export default function App() {
             </div>
           </header>
 
+          <div className="grid gap-6 mb-8">
+            <FormulaFinder onSelect={(id) => {
+              const topic = topics.find((t) => t.id === id);
+              if (topic) selectTopic(topic);
+            }} />
+            <HistoryPanel onRestore={(id) => {
+              const topic = topics.find((t) => t.id === id);
+              if (topic) selectTopic(topic);
+            }} />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">🔍</span>
+              <input
+                type="text"
+                placeholder="Buscar calculadora... (ej. swap, opciones, futuro)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white/80 pl-9 pr-4 py-3 text-sm text-ink shadow-sm outline-none focus:border-brand focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="grid gap-8">
             {Object.entries(groupedTopics).map(([category, categoryTopics]) => (
               <section key={category}>
@@ -107,6 +148,12 @@ export default function App() {
                 </div>
               </section>
             ))}
+            {Object.keys(groupedTopics).length === 0 && searchQuery && (
+              <div className="text-center py-10 text-slate-500">
+                <p className="text-2xl mb-2">🔎</p>
+                <p className="text-sm font-medium">No se encontraron resultados para "<span className="text-brand">{searchQuery}</span>"</p>
+              </div>
+            )}
             <GlossaryPanel />
           </div>
         </section>
@@ -195,6 +242,10 @@ export default function App() {
                 
                 {(selectedTopic.id.startsWith("payoff_") || selectedTopic.id === "option_strategies") && (
                   <PayoffChart topicId={selectedTopic.id} values={values} />
+                )}
+
+                {(selectedTopic.id === "ipc_coverage" || selectedTopic.id === "stock_future_coverage" || selectedTopic.id === "commodity_coverage") && (
+                  <PayoffTable topicId={selectedTopic.id} values={values} />
                 )}
 
                 <section className="rounded-lg border border-slate-200 bg-white p-5">

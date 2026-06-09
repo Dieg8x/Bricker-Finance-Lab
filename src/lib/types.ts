@@ -16,6 +16,7 @@ export interface TopicInput {
   type?: InputType;
   options?: FieldOption[];
   formulaVar?: string;
+  isPercent?: boolean;
 }
 
 export interface TopicOutput {

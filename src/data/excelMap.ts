@@ -137,9 +137,9 @@ export const excelMap: TopicDefinition[] = [
     formulaDisplay: "Pago_fijo = N × r_fija / f  |  Pago_var = N × (r_var + spread) / f  |  VPN = Σ flujo / (1 + r/f)^t",
     inputs: [
       { key: "notional", label: "Monto nocional", unit: "$", defaultValue: 250000, formulaVar: "N", helper: "Principal sobre el que se calculan los pagos." },
-      { key: "fixedRate", label: "Tasa fija anual", unit: "%", defaultValue: 0.1, formulaVar: "r_fija" },
-      { key: "variableRate", label: "Tasa variable base", unit: "%", defaultValue: 0.070172, formulaVar: "r_var" },
-      { key: "spread", label: "Spread variable", unit: "%", defaultValue: 0.2, formulaVar: "spread", helper: "Puedes capturarlo como 0.002 o como 0.20 si piensas en porcentaje." },
+      { key: "fixedRate", label: "Tasa fija anual", unit: "%", defaultValue: 0.1, formulaVar: "r_fija", isPercent: true },
+      { key: "variableRate", label: "Tasa variable base", unit: "%", defaultValue: 0.070172, formulaVar: "r_var", isPercent: true },
+      { key: "spread", label: "Spread variable", unit: "%", defaultValue: 0.002, formulaVar: "spread", helper: "Introduce el spread en porcentaje (ej. 0.2 para 0.2% anual).", isPercent: true },
       { key: "frequency", label: "Pagos por año", defaultValue: 1, type: "select", options: [
         { label: "Mensual (12)", value: 12 },
         { label: "Trimestral (4)", value: 4 },
@@ -147,7 +147,7 @@ export const excelMap: TopicDefinition[] = [
         { label: "Anual (1)", value: 1 },
       ] },
       { key: "periods", label: "Número de periodos", defaultValue: 12 },
-      { key: "discountRate", label: "Tasa de descuento", unit: "%", defaultValue: 0.070172 },
+      { key: "discountRate", label: "Tasa de descuento", unit: "%", defaultValue: 0.070172, isPercent: true },
       { key: "position", label: "Tipo de swap", defaultValue: "receiveFixed", type: "select", options: [
         { label: "Recibe fija / paga variable", value: "receiveFixed" },
         { label: "Paga fija / recibe variable", value: "payFixed" },
@@ -160,16 +160,17 @@ export const excelMap: TopicDefinition[] = [
   },
   {
     id: "general_swap",
-    title: "Formulario general de swap",
+    title: "Formulario completo de swap",
     sheet: "📝 FORMULARIO / 📋 ANÁLISIS",
-    description: "Versión completa del swap del Excel con los mismos campos esenciales.",
+    description: "Formulario completo de swap con todos los campos del Excel. Úsalo para verificar resultados o como referencia rápida en examen.",
     difficulty: "Medio",
     category: "Swaps",
+    useCase: "Úsalo cuando: quieres el formulario completo con todos los campos. Para el cálculo simplificado usa 'Swap de tasas simple'.",
     inputs: [
       { key: "notional", label: "Monto nocional", unit: "$", defaultValue: 250000 },
-      { key: "fixedRate", label: "Tasa fija anual", unit: "%", defaultValue: 0.1 },
-      { key: "variableRate", label: "Tasa variable base", unit: "%", defaultValue: 0.070172 },
-      { key: "spread", label: "Spread variable", unit: "%", defaultValue: 0.2 },
+      { key: "fixedRate", label: "Tasa fija anual", unit: "%", defaultValue: 0.1, isPercent: true },
+      { key: "variableRate", label: "Tasa variable base", unit: "%", defaultValue: 0.070172, isPercent: true },
+      { key: "spread", label: "Spread variable", unit: "%", defaultValue: 0.002, isPercent: true, helper: "Introduce el spread en porcentaje (ej. 0.2 para 0.2% anual)." },
       { key: "frequency", label: "Pagos por año", defaultValue: 1, type: "select", options: [
         { label: "Mensual", value: 12 },
         { label: "Trimestral", value: 4 },
@@ -177,7 +178,7 @@ export const excelMap: TopicDefinition[] = [
         { label: "Anual", value: 1 },
       ] },
       { key: "periods", label: "Total de periodos", defaultValue: 12 },
-      { key: "discountRate", label: "Tasa de descuento", unit: "%", defaultValue: 0.070172 },
+      { key: "discountRate", label: "Tasa de descuento", unit: "%", defaultValue: 0.070172, isPercent: true },
       { key: "position", label: "Tipo de swap", defaultValue: "receiveFixed", type: "select", options: [
         { label: "Recibe fija / paga variable", value: "receiveFixed" },
         { label: "Paga fija / recibe variable", value: "payFixed" },
@@ -258,7 +259,7 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "spot", label: "Precio spot de la acción", unit: "$", defaultValue: 40 },
       { key: "days", label: "Plazo del futuro", unit: "días", defaultValue: 180 },
-      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.0681 },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.0681, isPercent: true },
       { key: "dividend", label: "Dividendo", unit: "$", defaultValue: 2 },
       { key: "dividendDays", label: "Días al dividendo", unit: "días", defaultValue: 90 },
       { key: "compounding", label: "Capitalización", defaultValue: "simple", type: "select", options: [
@@ -280,8 +281,8 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "indexSpot", label: "Indice spot (nivel actual)", defaultValue: 52000, formulaVar: "I₀" },
       { key: "days", label: "Plazo", unit: "dias", defaultValue: 180, formulaVar: "n" },
-      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.08, formulaVar: "Rf" },
-      { key: "dividendYield", label: "Tasa de dividendos", unit: "%", defaultValue: 0.02, formulaVar: "d" },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.08, formulaVar: "Rf", isPercent: true },
+      { key: "dividendYield", label: "Tasa de dividendos", unit: "%", defaultValue: 0.02, formulaVar: "d", isPercent: true },
     ],
     outputs: [{ key: "futurePrice", label: "Futuro del indice", formula: "I₀ × e^((Rf-d)×n/360)" }],
   },
@@ -297,7 +298,7 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "spot", label: "Precio spot del commodity", unit: "$", defaultValue: 59, formulaVar: "S", helper: "Precio actual en el mercado spot." },
       { key: "days", label: "Plazo futuro", unit: "dias", defaultValue: 120, formulaVar: "d" },
-      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "% anual", defaultValue: 0.0681, formulaVar: "r" },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "% anual", defaultValue: 0.0681, formulaVar: "r", isPercent: true },
       { key: "compounding", label: "Capitalizacion", defaultValue: "simple", type: "select", options: [
         { label: "Simple (1 + r×t)", value: "simple" },
         { label: "Continua (e^rt)", value: "continuous" },
@@ -318,10 +319,10 @@ export const excelMap: TopicDefinition[] = [
       { key: "days", label: "Plazo", unit: "dias", defaultValue: 90, formulaVar: "d" },
       { key: "spotBuy", label: "Spot compra", unit: "MXN/USD", defaultValue: 17.1, formulaVar: "S_compra" },
       { key: "spotSell", label: "Spot venta", unit: "MXN/USD", defaultValue: 17.3, formulaVar: "S_venta" },
-      { key: "domesticPassive", label: "Tasa pasiva MXN", unit: "%", defaultValue: 0.07, formulaVar: "r_MX_pas" },
-      { key: "domesticActive", label: "Tasa activa MXN", unit: "%", defaultValue: 0.072, formulaVar: "r_MX_act" },
-      { key: "foreignPassive", label: "Tasa pasiva USD", unit: "%", defaultValue: 0.045, formulaVar: "r_USD_pas" },
-      { key: "foreignActive", label: "Tasa activa USD", unit: "%", defaultValue: 0.047, formulaVar: "r_USD_act" },
+      { key: "domesticPassive", label: "Tasa pasiva MXN", unit: "%", defaultValue: 0.07, formulaVar: "r_MX_pas", isPercent: true },
+      { key: "domesticActive", label: "Tasa activa MXN", unit: "%", defaultValue: 0.072, formulaVar: "r_MX_act", isPercent: true },
+      { key: "foreignPassive", label: "Tasa pasiva USD", unit: "%", defaultValue: 0.045, formulaVar: "r_USD_pas", isPercent: true },
+      { key: "foreignActive", label: "Tasa activa USD", unit: "%", defaultValue: 0.047, formulaVar: "r_USD_act", isPercent: true },
     ],
     outputs: [{ key: "buyForward", label: "Forward compra", formula: "S₀ × (1+r_MX×d/360) / (1+r_USD×d/360)" }],
   },
@@ -337,8 +338,8 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "shortDays", label: "Plazo corto (n₁)", unit: "dias", defaultValue: 182, formulaVar: "n₁" },
       { key: "longDays", label: "Plazo largo (n₂)", unit: "dias", defaultValue: 364, formulaVar: "n₂" },
-      { key: "shortRate", label: "Tasa plazo corto (i₁)", unit: "%", defaultValue: 0.0685, formulaVar: "i₁" },
-      { key: "longRate", label: "Tasa plazo largo (i₂)", unit: "%", defaultValue: 0.0719, formulaVar: "i₂" },
+      { key: "shortRate", label: "Tasa plazo corto (i₁)", unit: "%", defaultValue: 0.0685, formulaVar: "i₁", isPercent: true },
+      { key: "longRate", label: "Tasa plazo largo (i₂)", unit: "%", defaultValue: 0.0719, formulaVar: "i₂", isPercent: true },
     ],
     outputs: [{ key: "forwardRate", label: "Tasa forward", formula: "Fi = [(1+i₂×n₂/360)/(1+i₁×n₁/360)-1] × 360/(n₂-n₁)" }],
   },
@@ -354,8 +355,8 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "longDays", label: "Plazo largo", unit: "dias", defaultValue: 364, formulaVar: "n₂" },
       { key: "shortDays", label: "Plazo corto", unit: "dias", defaultValue: 182, formulaVar: "n₁" },
-      { key: "longRate", label: "Tasa largo plazo", unit: "%", defaultValue: 0.0719, formulaVar: "r₂" },
-      { key: "shortRate", label: "Tasa corto plazo", unit: "%", defaultValue: 0.0685, formulaVar: "r₁" },
+      { key: "longRate", label: "Tasa largo plazo", unit: "%", defaultValue: 0.0719, formulaVar: "r₂", isPercent: true },
+      { key: "shortRate", label: "Tasa corto plazo", unit: "%", defaultValue: 0.0685, formulaVar: "r₁", isPercent: true },
       { key: "desiredDays", label: "Plazo deseado", unit: "dias", defaultValue: 210, formulaVar: "n_x" },
     ],
     outputs: [{ key: "wiredRate", label: "Tasa alambrada", formula: "interpolacion compuesta" }],
@@ -371,8 +372,8 @@ export const excelMap: TopicDefinition[] = [
     formulaDisplay: "Liquidacion = N × (r_mercado - r_pactada) × d/base / (1 + r_mercado × d/base)",
     inputs: [
       { key: "notional", label: "Monto nocional", unit: "$", defaultValue: 1000000, formulaVar: "N" },
-      { key: "agreedRate", label: "Tasa pactada (FRA)", unit: "%", defaultValue: 0.066, formulaVar: "r_p" },
-      { key: "marketRate", label: "Tasa de mercado actual", unit: "%", defaultValue: 0.068, formulaVar: "r_m" },
+      { key: "agreedRate", label: "Tasa pactada (FRA)", unit: "%", defaultValue: 0.066, formulaVar: "r_p", isPercent: true },
+      { key: "marketRate", label: "Tasa de mercado actual", unit: "%", defaultValue: 0.068, formulaVar: "r_m", isPercent: true },
       { key: "days", label: "Plazo del periodo garantia", unit: "dias", defaultValue: 90, formulaVar: "d" },
       { key: "base", label: "Base de dias", defaultValue: 360, type: "select", options: [
         { label: "360", value: 360 },
@@ -393,10 +394,10 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "spot", label: "Precio del subyacente", unit: "$", defaultValue: 40, formulaVar: "S" },
       { key: "strike", label: "Precio de ejercicio", unit: "$", defaultValue: 36, formulaVar: "K" },
-      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.185, formulaVar: "r" },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.185, formulaVar: "r", isPercent: true },
       { key: "days", label: "Plazo", unit: "dias", defaultValue: 22, formulaVar: "d" },
-      { key: "volatility", label: "Volatilidad anual", unit: "%", defaultValue: 0.33, formulaVar: "σ" },
-      { key: "dividendYield", label: "Tasa por dividendo (q)", unit: "%", defaultValue: 0, formulaVar: "q" },
+      { key: "volatility", label: "Volatilidad anual", unit: "%", defaultValue: 0.33, formulaVar: "σ", isPercent: true },
+      { key: "dividendYield", label: "Tasa por dividendo (q)", unit: "%", defaultValue: 0, formulaVar: "q", isPercent: true },
     ],
     outputs: [{ key: "call", label: "Call", formula: "S×N(d1) - K×e^(-rt)×N(d2)" }],
     studySections: [
@@ -424,7 +425,7 @@ export const excelMap: TopicDefinition[] = [
     inputs: [
       { key: "spot", label: "Precio spot del subyacente", unit: "$", defaultValue: 100, formulaVar: "S₀" },
       { key: "strike", label: "Precio de ejercicio", unit: "$", defaultValue: 100, formulaVar: "K" },
-      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.08, formulaVar: "Rf" },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.08, formulaVar: "Rf", isPercent: true },
       { key: "days", label: "Plazo", unit: "dias", defaultValue: 180, formulaVar: "t" },
       { key: "upFactor", label: "Factor de alza", defaultValue: 1.2, formulaVar: "u" },
       { key: "downFactor", label: "Factor de baja", defaultValue: 0.85, formulaVar: "d" },
@@ -445,11 +446,11 @@ export const excelMap: TopicDefinition[] = [
     useCase: "Usalo cuando: el ejercicio da tasas fijas y variables para dos empresas y pide calcular el ahorro del swap.",
     formulaDisplay: "Ventaja total = |Δ_fija| - |Δ_variable|  |  Beneficio por empresa = (Ventaja - comision) / 2",
     inputs: [
-      { key: "fixedA", label: "Tasa fija empresa A", unit: "%", defaultValue: 0.1, formulaVar: "rF_A" },
-      { key: "variableA", label: "Tasa variable empresa A", unit: "%", defaultValue: 0.002, formulaVar: "rV_A" },
-      { key: "fixedB", label: "Tasa fija empresa B", unit: "%", defaultValue: 0.065, formulaVar: "rF_B" },
-      { key: "variableB", label: "Tasa variable empresa B", unit: "%", defaultValue: 0.0018, formulaVar: "rV_B" },
-      { key: "bankCommission", label: "Comision del banco", unit: "% de ventaja", defaultValue: 0.1, formulaVar: "c" },
+      { key: "fixedA", label: "Tasa fija empresa A", unit: "%", defaultValue: 0.1, formulaVar: "rF_A", isPercent: true },
+      { key: "variableA", label: "Tasa variable empresa A", unit: "%", defaultValue: 0.002, formulaVar: "rV_A", isPercent: true },
+      { key: "fixedB", label: "Tasa fija empresa B", unit: "%", defaultValue: 0.065, formulaVar: "rF_B", isPercent: true },
+      { key: "variableB", label: "Tasa variable empresa B", unit: "%", defaultValue: 0.0018, formulaVar: "rV_B", isPercent: true },
+      { key: "bankCommission", label: "Comision del banco", unit: "% de ventaja", defaultValue: 0.1, formulaVar: "c", isPercent: true },
     ],
     outputs: [{ key: "totalAdvantage", label: "Ventaja total", formula: "|rF_A - rF_B| - |rV_A - rV_B|" }],
   },
@@ -554,7 +555,7 @@ export const excelMap: TopicDefinition[] = [
     formulaDisplay: "F = IPC × (1 + CETES × d/360)  |  N_contratos = Valor_portafolio / (F × multiplicador)",
     inputs: [
       { key: "ipcSpot", label: "IPC spot (puntos actuales)", defaultValue: 50000, formulaVar: "IPC₀" },
-      { key: "riskFreeRate", label: "Tasa CETES / libre de riesgo", unit: "%", defaultValue: 0.055, formulaVar: "r" },
+      { key: "riskFreeRate", label: "Tasa CETES / libre de riesgo", unit: "%", defaultValue: 0.055, formulaVar: "r", isPercent: true },
       { key: "days", label: "Dias por vencer", unit: "dias", defaultValue: 91, formulaVar: "d" },
       { key: "portfolioValue", label: "Valor del portafolio a cubrir", unit: "$", defaultValue: 1000000, formulaVar: "V" },
       { key: "multiplier", label: "Multiplicador del contrato", defaultValue: 10, formulaVar: "M", helper: "En MexDer el multiplicador del IPC es 10." },
@@ -576,7 +577,7 @@ export const excelMap: TopicDefinition[] = [
     formulaDisplay: "F = S₀ × (1 + r_deseado × d/360)  |  N = acciones / acciones_por_contrato  |  Resultado = acciones × spot_vto + contratos × M × (F - spot_vto)",
     inputs: [
       { key: "spot", label: "Precio actual de la accion", unit: "$", defaultValue: 21.82, formulaVar: "S₀" },
-      { key: "desiredYield", label: "Rendimiento deseado anual", unit: "%", defaultValue: 0.05, formulaVar: "r" },
+      { key: "desiredYield", label: "Rendimiento deseado anual", unit: "%", defaultValue: 0.05, formulaVar: "r", isPercent: true },
       { key: "days", label: "Dias al vencimiento", unit: "dias", defaultValue: 241, formulaVar: "d" },
       { key: "shares", label: "Numero de acciones", defaultValue: 5000, formulaVar: "acciones" },
       { key: "sharesPerContract", label: "Acciones por contrato", defaultValue: 100, formulaVar: "M_acc", helper: "En MexDer: acciones = 100 por contrato." },
@@ -598,7 +599,7 @@ export const excelMap: TopicDefinition[] = [
     formulaDisplay: "F = S × (1 + r × d/360)  |  Costo_futuro = unidades × F  |  Ahorro = Costo_spot_vto - Costo_futuro",
     inputs: [
       { key: "spot", label: "Precio spot actual", unit: "$", defaultValue: 59, formulaVar: "S₀" },
-      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.0681, formulaVar: "r" },
+      { key: "riskFreeRate", label: "Tasa libre de riesgo", unit: "%", defaultValue: 0.0681, formulaVar: "r", isPercent: true },
       { key: "days", label: "Plazo del contrato", unit: "dias", defaultValue: 120, formulaVar: "d" },
       { key: "units", label: "Numero de unidades (barriles, toneladas...)", defaultValue: 30000, formulaVar: "Q" },
       { key: "spotAtMaturity", label: "Precio spot al vencimiento (para comparacion)", unit: "$", defaultValue: 60, formulaVar: "S_T", helper: "Precio real al que habrias comprado en spot. Deja en 0 para omitir." },
