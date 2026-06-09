@@ -39,12 +39,12 @@ function PayoffLineChart({ prices, results, strike, days, position }: LineChartP
   const zeroY = scaleY(0);
 
   const pts = prices.map((_, i) => `${scaleX(i).toFixed(1)},${scaleY(results[i]).toFixed(1)}`);
-  const gainPoly = pts.filter((_, i) => results[i] >= 0);
-  const lossPoly = pts.filter((_, i) => results[i] <= 0);
+  const gainPts = pts.filter((_, i) => results[i] >= 0);
+  const lossPts = pts.filter((_, i) => results[i] <= 0);
 
   // find where line crosses zero (break-even x)
   const beIdx = results.findIndex((r, i) => i > 0 && Math.sign(r) !== Math.sign(results[i - 1]));
-  let beX = beIdx > 0
+  const beX = beIdx > 0
     ? scaleX(beIdx - 1) + (scaleX(beIdx) - scaleX(beIdx - 1)) * Math.abs(results[beIdx - 1]) / (Math.abs(results[beIdx - 1]) + Math.abs(results[beIdx]))
     : scaleX(prices.indexOf(strike));
   const strikeXPos = prices.findIndex(p => Math.abs(p - strike) < 0.001);
@@ -53,15 +53,19 @@ function PayoffLineChart({ prices, results, strike, days, position }: LineChartP
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-2xl" style={{ height: "180px" }}>
       {/* Gain area */}
-      <polygon
-        points={`${padL},${zeroY} ${pts.filter((_, i) => results[i] >= 0).join(" ")} ${pts.filter((_, i) => results[i] >= 0).length > 0 ? scaleX(results.reduce((last, r, i) => r >= 0 ? i : last, 0)).toFixed(1) : scaleX(0)},${zeroY}`}
-        fill="#22c55e" opacity="0.15"
-      />
+      {gainPts.length > 1 && (
+        <polygon
+          points={`${gainPts[0].split(",")[0]},${zeroY} ${gainPts.join(" ")} ${gainPts[gainPts.length - 1].split(",")[0]},${zeroY}`}
+          fill="#22c55e" opacity="0.18"
+        />
+      )}
       {/* Loss area */}
-      <polygon
-        points={`${padL},${zeroY} ${pts.filter((_, i) => results[i] <= 0).join(" ")} ${pts.filter((_, i) => results[i] <= 0).length > 0 ? scaleX(results.reduce((last, r, i) => r <= 0 ? i : last, 0)).toFixed(1) : scaleX(0)},${zeroY}`}
-        fill="#ef4444" opacity="0.15"
-      />
+      {lossPts.length > 1 && (
+        <polygon
+          points={`${lossPts[0].split(",")[0]},${zeroY} ${lossPts.join(" ")} ${lossPts[lossPts.length - 1].split(",")[0]},${zeroY}`}
+          fill="#ef4444" opacity="0.18"
+        />
+      )}
       {/* Zero axis */}
       <line x1={padL} y1={zeroY} x2={W - padR} y2={zeroY} stroke="#94a3b8" strokeWidth="1.5" />
       {/* Strike vertical */}
@@ -364,7 +368,7 @@ export function PayoffTable({ topicId, values, result }: Props) {
 
   const isStockFuture = topicId === "stock_future";
   const theoreticalPrice = isStockFuture
-    ? (result?.results?.futurePrice as number) ?? Number(values.spot) ?? 0
+    ? Number(result?.results?.futurePrice) || Number(values.spot) || 0
     : 0;
 
   return (

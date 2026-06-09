@@ -1,28 +1,5 @@
 import { useState, useEffect } from "react";
-
-const STORAGE_KEY = "bricker_history";
-const MAX_ENTRIES = 5;
-
-export interface HistoryEntry {
-  topicTitle: string;
-  topicId: string;
-  summary: string;
-  timestamp: number;
-}
-
-export function saveToHistory(topicTitle: string, topicId: string, summary: string): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const existing: HistoryEntry[] = raw ? JSON.parse(raw) : [];
-    const newEntry: HistoryEntry = { topicTitle, topicId, summary, timestamp: Date.now() };
-    // Remove duplicates for same topic, then prepend new entry
-    const filtered = existing.filter((e) => e.topicId !== topicId);
-    const updated = [newEntry, ...filtered].slice(0, MAX_ENTRIES);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {
-    // silently ignore storage errors
-  }
-}
+import { type HistoryEntry, STORAGE_KEY } from "../lib/history";
 
 function relativeTime(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
