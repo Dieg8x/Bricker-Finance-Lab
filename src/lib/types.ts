@@ -15,6 +15,7 @@ export interface TopicInput {
   helper?: string;
   type?: InputType;
   options?: FieldOption[];
+  formulaVar?: string;
 }
 
 export interface TopicOutput {
@@ -47,6 +48,8 @@ export interface TopicDefinition {
   description: string;
   difficulty: Difficulty;
   category: string;
+  useCase?: string;
+  formulaDisplay?: string;
   inputs: TopicInput[];
   outputs: TopicOutput[];
   studySections?: StudySection[];

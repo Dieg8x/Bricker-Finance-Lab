@@ -1,7 +1,7 @@
 import type { CalculationInput, CalculationResult } from "../types";
 import { calculateFRA } from "./fra";
 import { calculateForwardFX, calculateForwardRate } from "./forwards";
-import { calculateCommodityFuture, calculateFutureContracts, calculateIndexFuture, calculateSimpleFuture, calculateStockFuture, calculateCrossHedging } from "./futures";
+import { calculateCommodityFuture, calculateFutureContracts, calculateIndexFuture, calculateSimpleFuture, calculateStockFuture, calculateCrossHedging, calculateIPCCoverage, calculateStockFutureCoverage, calculateCommodityCoverage } from "./futures";
 import { calculateBinomialOption, calculateBlackScholes } from "./options";
 import { calculatePayoffWithPremium, calculatePayoffWithoutPremium } from "./payoffs";
 import { calculateWiredRate } from "./rates";
@@ -29,4 +29,7 @@ export const calculators: Record<string, (input: CalculationInput) => Calculatio
   binomial_option: calculateBinomialOption,
   option_strategies: calculateOptionStrategies,
   synthetic_derivatives: calculateSyntheticDerivative,
+  ipc_coverage: calculateIPCCoverage,
+  stock_future_coverage: calculateStockFutureCoverage,
+  commodity_coverage: calculateCommodityCoverage,
 };

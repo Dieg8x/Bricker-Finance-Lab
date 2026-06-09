@@ -191,3 +191,187 @@ export function calculateCrossHedging(input: CalculationInput): CalculationResul
   };
 }
 
+export function calculateIPCCoverage(input: CalculationInput): CalculationResult {
+  const ipcSpot = asNumber(input.ipcSpot);
+  const riskFreeRate = normalizeRate(input.riskFreeRate);
+  const days = asNumber(input.days);
+  const portfolioValue = asNumber(input.portfolioValue);
+  const multiplier = asNumber(input.multiplier);
+  const spotAtMaturity = asNumber(input.spotAtMaturity);
+
+  const t = days / 360;
+  const theoreticalPrice = ipcSpot * (1 + riskFreeRate * t);
+  const contractValue = theoreticalPrice * multiplier;
+  const contracts = Math.ceil(portfolioValue / contractValue);
+  const actualContracts = portfolioValue / contractValue;
+
+  const futuresGain = contracts * (theoreticalPrice - spotAtMaturity) * multiplier;
+  const portfolioLoss = portfolioValue * ((spotAtMaturity - ipcSpot) / ipcSpot);
+  const netResult = portfolioLoss + futuresGain;
+
+  const warnings = compactWarnings([
+    requirePositive(ipcSpot, "el IPC spot"),
+    requireRate(input.riskFreeRate, "la tasa libre de riesgo"),
+    requirePositive(days, "el plazo"),
+    requirePositive(portfolioValue, "el valor del portafolio"),
+    requirePositive(multiplier, "el multiplicador"),
+  ]);
+
+  return {
+    results: {
+      theoreticalPrice: round(theoreticalPrice, 2),
+      contractValue: round(contractValue, 2),
+      contracts,
+      actualContracts: round(actualContracts, 4),
+      futuresGain: round(futuresGain, 2),
+      portfolioLoss: round(portfolioLoss, 2),
+      netResult: round(netResult, 2),
+    },
+    metrics: [
+      { key: "theoreticalPrice", label: "Precio futuro teorico (IPC)", value: theoreticalPrice, emphasis: true },
+      { key: "contractValue", label: "Valor nocional por contrato", value: contractValue, unit: "$" },
+      { key: "contracts", label: "Contratos necesarios", value: contracts, emphasis: true },
+      { key: "actualContracts", label: "Contratos exactos", value: actualContracts },
+      ...(input.spotAtMaturity ? [
+        { key: "futuresGain", label: "Ganancia/perdida en futuros", value: futuresGain, unit: "$" },
+        { key: "portfolioLoss", label: "Resultado del portafolio", value: portfolioLoss, unit: "$" },
+        { key: "netResult", label: "Resultado neto cubierto", value: netResult, unit: "$", emphasis: true },
+      ] : []),
+    ],
+    formula: "F = IPC_spot × (1 + r × d/360) | Contratos = Valor_portafolio / (F × multiplicador)",
+    steps: [
+      `F = ${formatNumber(ipcSpot, 0)} × (1 + ${formatPercent(riskFreeRate)} × ${days}/360) = ${formatNumber(theoreticalPrice, 2)}`,
+      `Valor por contrato = ${formatNumber(theoreticalPrice, 2)} × ${multiplier} = ${formatMoney(contractValue)}`,
+      `Contratos exactos = ${formatMoney(portfolioValue)} / ${formatMoney(contractValue)} = ${formatNumber(actualContracts, 4)}`,
+      `Contratos (redondeado hacia arriba) = ${contracts}`,
+      ...(input.spotAtMaturity ? [
+        `Al vencimiento (IPC = ${formatNumber(spotAtMaturity, 0)}): ganancia en futuros = ${formatMoney(futuresGain)}`,
+        `Resultado portafolio = ${formatMoney(portfolioLoss)} | Resultado neto = ${formatMoney(netResult)}`,
+      ] : []),
+    ],
+    interpretation: `El precio futuro teorico del IPC es ${formatNumber(theoreticalPrice, 2)} puntos. Se necesitan ${contracts} contratos CORTOS (venta) para cubrir el portafolio de ${formatMoney(portfolioValue)}.`,
+    examExplanation: "Para cubrir un portafolio que replica el IPC: 1) Calcula el precio futuro teorico. 2) Divide el valor del portafolio entre el valor de un contrato para obtener contratos necesarios. 3) Toma posicion CORTA (vende futuros) porque el portafolio es largo.",
+    warnings,
+  };
+}
+
+export function calculateStockFutureCoverage(input: CalculationInput): CalculationResult {
+  const spot = asNumber(input.spot);
+  const desiredYield = normalizeRate(input.desiredYield);
+  const days = asNumber(input.days);
+  const shares = asNumber(input.shares);
+  const sharesPerContract = asNumber(input.sharesPerContract);
+  const spotAtMaturity = asNumber(input.spotAtMaturity);
+
+  const t = days / 360;
+  const theoreticalPrice = spot * (1 + desiredYield * t);
+  const contracts = Math.round(shares / sharesPerContract);
+  const positionValue = shares * spot;
+  const guaranteedValue = shares * theoreticalPrice;
+
+  const futuresResult = contracts * sharesPerContract * (theoreticalPrice - spotAtMaturity);
+  const spotResult = shares * spotAtMaturity;
+  const totalWithHedge = spotResult + futuresResult;
+  const yieldWithHedge = (totalWithHedge - positionValue) / positionValue;
+  const yieldWithoutHedge = (spotResult - positionValue) / positionValue;
+
+  const warnings = compactWarnings([
+    requirePositive(spot, "el precio spot"),
+    requireRate(input.desiredYield, "el rendimiento deseado"),
+    requirePositive(days, "el plazo"),
+    requirePositive(shares, "el numero de acciones"),
+    requirePositive(sharesPerContract, "las acciones por contrato"),
+  ]);
+
+  return {
+    results: {
+      theoreticalPrice: round(theoreticalPrice, 4),
+      contracts,
+      positionValue: round(positionValue, 2),
+      guaranteedValue: round(guaranteedValue, 2),
+      futuresResult: round(futuresResult, 2),
+      totalWithHedge: round(totalWithHedge, 2),
+      yieldWithHedge: round(yieldWithHedge, 6),
+      yieldWithoutHedge: round(yieldWithoutHedge, 6),
+    },
+    metrics: [
+      { key: "theoreticalPrice", label: "Precio futuro / Strike", value: theoreticalPrice, unit: "$", emphasis: true },
+      { key: "contracts", label: "Contratos necesarios", value: contracts, emphasis: true },
+      { key: "positionValue", label: "Valor actual de la posicion", value: positionValue, unit: "$" },
+      { key: "guaranteedValue", label: "Valor garantizado con cobertura", value: guaranteedValue, unit: "$" },
+      ...(input.spotAtMaturity ? [
+        { key: "futuresResult", label: "Resultado en futuros", value: futuresResult, unit: "$" },
+        { key: "totalWithHedge", label: "Total recibido con cobertura", value: totalWithHedge, unit: "$", emphasis: true },
+        { key: "yieldWithHedge", label: "Rendimiento CON cobertura", value: yieldWithHedge, unit: "%" },
+        { key: "yieldWithoutHedge", label: "Rendimiento SIN cobertura", value: yieldWithoutHedge, unit: "%" },
+      ] : []),
+    ],
+    formula: "F = S × (1 + r_deseado × d/360) | Contratos = acciones / acciones_por_contrato",
+    steps: [
+      `Precio futuro = ${formatMoney(spot)} × (1 + ${formatPercent(desiredYield)} × ${days}/360) = ${formatMoney(theoreticalPrice)}`,
+      `Contratos = ${formatNumber(shares, 0)} acciones / ${sharesPerContract} por contrato = ${contracts}`,
+      `Valor actual de la posicion = ${formatNumber(shares, 0)} × ${formatMoney(spot)} = ${formatMoney(positionValue)}`,
+      `Valor garantizado = ${formatNumber(shares, 0)} × ${formatMoney(theoreticalPrice)} = ${formatMoney(guaranteedValue)}`,
+      ...(input.spotAtMaturity ? [
+        `Al vencimiento spot = ${formatMoney(spotAtMaturity)}`,
+        `Resultado en futuros = ${contracts} × ${sharesPerContract} × (${formatMoney(theoreticalPrice)} - ${formatMoney(spotAtMaturity)}) = ${formatMoney(futuresResult)}`,
+        `Total con cobertura = ${formatMoney(spotResult)} + ${formatMoney(futuresResult)} = ${formatMoney(totalWithHedge)}`,
+        `Rendimiento con cobertura = ${formatPercent(yieldWithHedge)} vs sin cobertura = ${formatPercent(yieldWithoutHedge)}`,
+      ] : []),
+    ],
+    interpretation: `El precio futuro que garantiza el rendimiento deseado es ${formatMoney(theoreticalPrice)} por accion. Se necesitan ${contracts} contratos de venta (POSICION CORTA en futuros) para garantizar el rendimiento de ${formatPercent(desiredYield)} anual.`,
+    examExplanation: "1) Calcula el precio futuro teorico usando la tasa de rendimiento deseada. 2) El numero de contratos = acciones totales / acciones por contrato. 3) Toma posicion CORTA (vende futuros) para asegurar ese precio de venta.",
+    warnings,
+  };
+}
+
+export function calculateCommodityCoverage(input: CalculationInput): CalculationResult {
+  const spot = asNumber(input.spot);
+  const riskFreeRate = normalizeRate(input.riskFreeRate);
+  const days = asNumber(input.days);
+  const units = asNumber(input.units);
+  const spotAtMaturity = asNumber(input.spotAtMaturity);
+
+  const t = days / 360;
+  const theoreticalPrice = spot * (1 + riskFreeRate * t);
+
+  const spotPurchaseCost = units * spotAtMaturity;
+  const futureCost = units * theoreticalPrice;
+  const savingsWithFuture = spotPurchaseCost - futureCost;
+
+  const warnings = compactWarnings([
+    requirePositive(spot, "el precio spot"),
+    requireRate(input.riskFreeRate, "la tasa libre de riesgo"),
+    requirePositive(days, "el plazo"),
+    requirePositive(units, "el numero de unidades"),
+  ]);
+
+  return {
+    results: {
+      theoreticalPrice: round(theoreticalPrice, 4),
+      futureCost: round(futureCost, 2),
+      spotPurchaseCost: round(spotPurchaseCost, 2),
+      savingsWithFuture: round(savingsWithFuture, 2),
+    },
+    metrics: [
+      { key: "theoreticalPrice", label: "Precio futuro teorico", value: theoreticalPrice, unit: "$", emphasis: true },
+      { key: "futureCost", label: "Costo total con futuro", value: futureCost, unit: "$" },
+      ...(input.spotAtMaturity ? [
+        { key: "spotPurchaseCost", label: "Costo si compra en spot", value: spotPurchaseCost, unit: "$" },
+        { key: "savingsWithFuture", label: "Diferencia futuro vs spot", value: savingsWithFuture, unit: "$", emphasis: true },
+      ] : []),
+    ],
+    formula: "F = S × (1 + r × d/360) | Resultado = Unidades × (F_spot_vto - F_pactado)",
+    steps: [
+      `F = ${formatMoney(spot)} × (1 + ${formatPercent(riskFreeRate)} × ${days}/360) = ${formatMoney(theoreticalPrice)}`,
+      `Costo total con futuro = ${formatNumber(units, 0)} unidades × ${formatMoney(theoreticalPrice)} = ${formatMoney(futureCost)}`,
+      ...(input.spotAtMaturity ? [
+        `Costo en mercado spot al vencimiento = ${formatNumber(units, 0)} × ${formatMoney(spotAtMaturity)} = ${formatMoney(spotPurchaseCost)}`,
+        `Diferencia (ahorro con futuro) = ${formatMoney(spotPurchaseCost)} - ${formatMoney(futureCost)} = ${formatMoney(savingsWithFuture)}`,
+      ] : []),
+    ],
+    interpretation: `El precio futuro teorico es ${formatMoney(theoreticalPrice)} por unidad, dando un costo total comprometido de ${formatMoney(futureCost)}. ${savingsWithFuture > 0 ? `La cobertura con futuro genera un ahorro de ${formatMoney(savingsWithFuture)} vs comprar en spot al vencimiento.` : `Comprar en spot habria sido mas barato por ${formatMoney(-savingsWithFuture)}.`}`,
+    examExplanation: "1) Calcula el precio futuro. 2) Con el futuro fijas el precio de compra HOY aunque pagues al vencimiento. 3) Compara contra lo que habria costado comprar en spot al vencimiento para medir el beneficio de la cobertura.",
+    warnings,
+  };
+}

@@ -25,12 +25,31 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
         <p className="mt-2 text-sm leading-6 text-slate-600">{topic.description}</p>
       </div>
 
+      {topic.useCase && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
+          <span className="mt-0.5 text-amber-500 shrink-0">&#9654;</span>
+          <p className="text-sm font-medium text-amber-800">{topic.useCase}</p>
+        </div>
+      )}
+
+      {topic.formulaDisplay && (
+        <div className="mb-5 rounded-lg bg-slate-900 px-4 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Formula</p>
+          <p className="font-mono text-sm leading-6 text-emerald-300 break-words">{topic.formulaDisplay}</p>
+        </div>
+      )}
+
       <div className="grid gap-4">
         {topic.inputs.map((field) => (
           <label key={field.key} className="grid gap-1.5">
-            <span className="text-sm font-bold text-ink">
+            <span className="flex items-center gap-2 text-sm font-bold text-ink">
               {field.label}
-              {field.unit ? <span className="font-normal text-slate-500"> ({field.unit})</span> : null}
+              {field.unit ? <span className="font-normal text-slate-500">({field.unit})</span> : null}
+              {field.formulaVar ? (
+                <span className="ml-auto rounded bg-brand/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-brand">
+                  {field.formulaVar}
+                </span>
+              ) : null}
             </span>
             {field.type === "select" ? (
               <select
@@ -53,12 +72,12 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
                 onChange={(event) => onChange(field.key, event.target.value)}
               />
             )}
-            
+
             {activeRates && field.key.toLowerCase().includes("rate") && (
               <div className="flex gap-2 flex-wrap mt-1">
                 {activeRates.cetes28 && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => onChange(field.key, activeRates.cetes28.dato)}
                     className="text-[11px] bg-blue-50 text-brand border border-blue-200 rounded px-2 py-0.5 font-medium hover:bg-blue-100"
                   >
@@ -66,8 +85,8 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
                   </button>
                 )}
                 {activeRates.tiie28 && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => onChange(field.key, activeRates.tiie28.dato)}
                     className="text-[11px] bg-blue-50 text-brand border border-blue-200 rounded px-2 py-0.5 font-medium hover:bg-blue-100"
                   >
@@ -76,7 +95,7 @@ export function DynamicForm({ topic, values, onChange, onSubmit, onReset, active
                 )}
               </div>
             )}
-            
+
             {field.helper ? <span className="text-xs leading-5 text-slate-500">{field.helper}</span> : null}
           </label>
         ))}

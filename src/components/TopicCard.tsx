@@ -21,14 +21,24 @@ export function TopicCard({ topic, onSelect }: Props) {
         </div>
         <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${levelClass}`}>{topic.difficulty}</span>
       </div>
-      <p className="text-sm leading-6 text-slate-600 mb-4">{topic.description}</p>
-      <p className="mt-auto mb-6 text-xs text-slate-500 font-medium">Hoja: {topic.sheet}</p>
+      <p className="text-sm leading-6 text-slate-600 mb-3">{topic.description}</p>
+      {topic.useCase && (
+        <p className="mb-3 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 leading-5">
+          {topic.useCase}
+        </p>
+      )}
+      {topic.formulaDisplay && (
+        <p className="mb-4 rounded-md bg-slate-900 px-3 py-2 font-mono text-[11px] text-emerald-300 break-words">
+          {topic.formulaDisplay}
+        </p>
+      )}
+      <p className="mt-auto mb-5 text-xs text-slate-500 font-medium">Hoja: {topic.sheet}</p>
       <button
         type="button"
         className="mt-auto w-full rounded-xl bg-slate-100/80 px-4 py-2.5 text-sm font-bold text-ink transition-all group-hover:bg-brand group-hover:text-white group-hover:shadow-md"
         onClick={() => onSelect(topic)}
       >
-        Resolver Ejercicio
+        {topic.inputs.length > 0 ? "Resolver Ejercicio" : "Ver Contenido"}
       </button>
     </article>
   );
