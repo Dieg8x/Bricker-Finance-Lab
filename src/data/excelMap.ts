@@ -270,6 +270,8 @@ export const excelMap: TopicDefinition[] = [
         { label: "Simple (1 + r×t)", value: "simple" },
         { label: "Continua (e^rt)", value: "continuous" },
       ] },
+      { key: "multiplier", label: "Multiplicador del contrato", defaultValue: 10, formulaVar: "M", helper: "En MexDer acciones: 100 acciones por contrato. En futuros de índice: $10 por punto. Ajusta según el contrato." },
+      { key: "investmentValue", label: "Valor de la inversión a cubrir", unit: "$", defaultValue: 109100, formulaVar: "V", helper: "Monto total que quieres cubrir (ej. 5,000 acciones × precio spot). Deja en 0 para omitir." },
     ],
     outputs: [{ key: "futurePrice", label: "Precio futuro", formula: "F = (S - VP_div) × (1 + r×d/360)" }],
   },

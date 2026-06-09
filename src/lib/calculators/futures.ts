@@ -51,6 +51,8 @@ export function calculateStockFuture(input: CalculationInput): CalculationResult
   const rate = normalizeRate(input.riskFreeRate);
   const compounding = String(input.compounding || "simple");
   const hasDividend = String(input.dividendMode || "no") === "yes";
+  const multiplier = asNumber(input.multiplier || 10);
+  const investmentValue = asNumber(input.investmentValue || 0);
 
   const dividend = hasDividend ? asNumber(input.dividend) : 0;
   const dividendDays = hasDividend ? asNumber(input.dividendDays) : 0;
@@ -67,48 +69,76 @@ export function calculateStockFuture(input: CalculationInput): CalculationResult
 
   const futurePrice = (spot - pvDividend) * fvFactor;
 
+  // Valor nocional de UN contrato = precio futuro × multiplicador
+  const contractNominal = futurePrice * multiplier;
+  // Número de contratos exactos y redondeados
+  const contractsExact = investmentValue > 0 ? investmentValue / contractNominal : 0;
+  const contractsRounded = Math.round(contractsExact);
+
   const warnings = compactWarnings([
     requirePositive(spot, "el precio spot"),
     requirePositive(days, "el plazo"),
     requireRate(input.riskFreeRate, "la tasa libre de riesgo"),
     hasDividend ? requireNonNegative(dividend, "el dividendo") : null,
     hasDividend ? requireNonNegative(dividendDays, "los días al dividendo") : null,
+    multiplier <= 0 ? "El multiplicador debe ser mayor a 0." : null,
   ]);
 
   const formulaSinDiv = compounding === "continuous" ? "F = S × e^(r×d/360)" : "F = S × (1 + r × d/360)";
   const formulaConDiv = compounding === "continuous" ? "F = (S - VP_div) × e^(r×d/360)" : "F = (S - VP_div) × (1 + r × d/360)";
 
-  const stepsSinDiv = [
-    compounding === "continuous"
-      ? `F = ${formatMoney(spot)} × e^(${formatPercent(rate)} × ${days}/360)`
-      : `F = ${formatMoney(spot)} × (1 + ${formatPercent(rate)} × ${days}/360)`,
-    `F = ${formatMoney(futurePrice)}`,
-  ];
+  const baseSteps = hasDividend
+    ? [
+        compounding === "continuous"
+          ? `VP(dividendo) = ${formatMoney(dividend)} × e^(-${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`
+          : `VP(dividendo) = ${formatMoney(dividend)} / (1 + ${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`,
+        compounding === "continuous"
+          ? `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × e^(${formatPercent(rate)} × ${days}/360) = ${formatMoney(futurePrice)}`
+          : `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × (1 + ${formatPercent(rate)} × ${days}/360) = ${formatMoney(futurePrice)}`,
+      ]
+    : [
+        compounding === "continuous"
+          ? `F = ${formatMoney(spot)} × e^(${formatPercent(rate)} × ${days}/360) = ${formatMoney(futurePrice)}`
+          : `F = ${formatMoney(spot)} × (1 + ${formatPercent(rate)} × ${days}/360) = ${formatMoney(futurePrice)}`,
+      ];
 
-  const stepsConDiv = [
-    compounding === "continuous"
-      ? `VP(dividendo) = ${formatMoney(dividend)} × e^(-${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`
-      : `VP(dividendo) = ${formatMoney(dividend)} / (1 + ${formatPercent(rate)} × ${dividendDays}/360) = ${formatMoney(pvDividend)}`,
-    compounding === "continuous"
-      ? `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × e^(${formatPercent(rate)} × ${days}/360)`
-      : `F = (${formatMoney(spot)} - ${formatMoney(pvDividend)}) × (1 + ${formatPercent(rate)} × ${days}/360)`,
-    `F = ${formatMoney(futurePrice)}`,
-  ];
+  const contractSteps = multiplier > 0
+    ? [
+        `Valor nocional 1 contrato = F × multiplicador = ${formatMoney(futurePrice)} × ${formatNumber(multiplier, 0)} = ${formatMoney(contractNominal)}`,
+        ...(investmentValue > 0
+          ? [
+              `Contratos exactos = Inversión / Valor nocional = ${formatMoney(investmentValue)} / ${formatMoney(contractNominal)} = ${formatNumber(contractsExact, 4)}`,
+              `Contratos (redondeado) = ${contractsRounded}`,
+            ]
+          : []),
+      ]
+    : [];
 
   return {
-    results: { pvDividend: round(pvDividend, 4), futurePrice: round(futurePrice, 4) },
+    results: {
+      pvDividend: round(pvDividend, 4),
+      futurePrice: round(futurePrice, 4),
+      contractNominal: round(contractNominal, 2),
+      contractsExact: round(contractsExact, 4),
+      contractsRounded,
+    },
     metrics: [
-      { key: "futurePrice", label: "Precio futuro de la acción", value: futurePrice, unit: "$", emphasis: true },
-      ...(hasDividend ? [{ key: "pvDividend", label: "VP del dividendo descontado", value: pvDividend, unit: "$" }] : []),
+      { key: "futurePrice", label: "Precio futuro teórico", value: futurePrice, unit: "$", emphasis: true },
+      ...(hasDividend ? [{ key: "pvDividend", label: "VP del dividendo", value: pvDividend, unit: "$" }] : []),
+      { key: "contractNominal", label: `Valor nocional 1 contrato (× ${formatNumber(multiplier, 0)})`, value: contractNominal, unit: "$", emphasis: true },
+      ...(investmentValue > 0
+        ? [
+            { key: "contractsExact", label: "Contratos exactos", value: contractsExact },
+            { key: "contractsRounded", label: "Contratos necesarios (redondeado)", value: contractsRounded, emphasis: true },
+          ]
+        : []),
     ],
-    formula: hasDividend ? formulaConDiv : formulaSinDiv,
-    steps: hasDividend ? stepsConDiv : stepsSinDiv,
-    interpretation: hasDividend
-      ? `Con dividendo de ${formatMoney(dividend)} en ${dividendDays} días, el precio futuro teórico es ${formatMoney(futurePrice)}.`
-      : `Sin dividendo, el precio futuro teórico de la acción es ${formatMoney(futurePrice)}.`,
+    formula: `${hasDividend ? formulaConDiv : formulaSinDiv}  |  Nocional = F × M  |  N = Inversión / Nocional`,
+    steps: [...baseSteps, ...contractSteps],
+    interpretation: `Precio futuro: ${formatMoney(futurePrice)}. Valor nocional por contrato: ${formatMoney(contractNominal)}.${investmentValue > 0 ? ` Para cubrir ${formatMoney(investmentValue)} se necesitan ${contractsRounded} contrato${contractsRounded !== 1 ? "s" : ""} (exacto: ${formatNumber(contractsExact, 4)}).` : ""}`,
     examExplanation: hasDividend
-      ? "1) Descuenta el dividendo a valor presente. 2) Réstalo al spot. 3) Capitaliza al plazo del futuro."
-      : "Sin dividendo: simplemente capitaliza el spot por la tasa libre de riesgo durante el plazo.",
+      ? "1) Descuenta dividendo a VP. 2) Resta al spot. 3) Capitaliza al plazo. 4) Nocional = F × multiplicador. 5) Contratos = Inversión / Nocional."
+      : "1) Capitaliza spot por tasa y plazo → precio futuro. 2) Nocional por contrato = F × multiplicador. 3) Contratos = Inversión total / Nocional.",
     warnings,
   };
 }
